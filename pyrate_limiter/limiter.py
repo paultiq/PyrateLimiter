@@ -273,6 +273,7 @@ class Limiter:
 
             return True
 
+        print("Acquiring by putting")
         acquire = bucket.put(item)
 
         if isawaitable(acquire):
@@ -295,7 +296,10 @@ class Limiter:
         """Try acquiring an item with name & weight
         Return true on success, false on failure
         """
+        print(f"Trying to acquire {name}")
         with self.lock:
+            print(f"Trying to acquire {name} after lock")
+
             assert weight >= 0, "item's weight must be >= 0"
 
             if weight == 0:
@@ -354,6 +358,7 @@ class Limiter:
 
                 return _handle_async_result()
 
+            print(f"{name} got result")
             return result
 
     def as_decorator(self) -> Callable[[ItemMapping], DecoratorWrapper]:
