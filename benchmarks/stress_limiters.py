@@ -32,13 +32,12 @@ class TestResult:
 def create_sqlite_limiter(rate: Rate, use_fileLock: bool, max_delay: int):
     bucket = SQLiteBucket.init_from_file([rate], db_path="pyrate_limiter.sqlite", use_file_lock=use_fileLock)
 
-    # retry_until_max_delay=True
     if use_fileLock:
         kwargs = dict(clock=SQLiteClock(bucket))
     else:
         kwargs = {}
 
-    return Limiter(bucket, raise_when_fail=False, max_delay=max_delay, **kwargs)
+    return Limiter(bucket, raise_when_fail=False, max_delay=max_delay, retry_until_max_delay=True, **kwargs)
 
 
 def create_rate_limiter_factory(
