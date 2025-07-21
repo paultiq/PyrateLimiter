@@ -37,9 +37,9 @@ jobs:
         ports:
           - 5432:5432
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        python-version: ["3.8", "3.13"]
+        python-version: ["3.8", "3.14", "3.14t"]
 
     steps:
     - uses: actions/checkout@v4
@@ -47,6 +47,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        allow-prereleases: true 
     - uses: snok/install-poetry@v1.4.1
       with:
         virtualenvs-in-project: true
