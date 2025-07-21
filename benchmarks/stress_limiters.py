@@ -55,6 +55,16 @@ def create_mp_limiter(max_delay: int, bucket: MultiprocessBucket):
     return limiter
 
 
+def create_mp_limiter(max_delay: int, bucket: MultiprocessBucket):
+
+    limiter = Limiter(bucket, raise_when_fail=False, clock=MonotonicClock(),
+                      max_delay=max_delay)
+
+    limiter.lock = bucket.mp_lock  # type: ignore[assignment]
+
+    return limiter
+
+
 def create_rate_limiter_factory(
     requests_per_second: int,
     max_delay_seconds: int,
