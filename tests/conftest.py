@@ -18,6 +18,8 @@ from pyrate_limiter import MultiprocessBucket
 from pyrate_limiter import PostgresBucket
 from pyrate_limiter import Rate
 from pyrate_limiter import RedisBucket
+from pyrate_limiter import SQLiteBucket
+from pyrate_limiter import SQLiteQueries as Queries
 from pyrate_limiter import TimeAsyncClock
 from pyrate_limiter import TimeClock
 
