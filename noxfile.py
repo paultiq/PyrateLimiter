@@ -23,6 +23,11 @@ def cover(session) -> None:
 
 
 @session(python=False)
+def test_mp(session) -> None:
+    session.run("pytest", *PYTEST_MP_ARGS)
+
+
+@session(python=False)
 def test(session) -> None:
     session.run("pytest", *PYTEST_MP_ARGS)
     session.run("pytest", *PYTEST_ARGS)
