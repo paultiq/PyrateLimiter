@@ -12,6 +12,8 @@ from typing import Optional
 
 from pyrate_limiter import Duration
 from pyrate_limiter import Limiter
+from pyrate_limiter import MonotonicClock
+from pyrate_limiter import MultiprocessBucket
 from pyrate_limiter import Rate
 from pyrate_limiter import SQLiteBucket
 from pyrate_limiter import SQLiteClock
@@ -41,6 +43,16 @@ def create_sqlite_limiter(rate: Rate, use_fileLock: bool, max_delay: int):
     return Limiter(bucket, raise_when_fail=False, max_delay=max_delay, **kwargs)
 
 
+def create_mp_limiter(max_delay: int, bucket: MultiprocessBucket):
+
+    limiter = Limiter(bucket, raise_when_fail=False, clock=MonotonicClock(),
+                      max_delay=max_delay)
+
+    limiter.lock = bucket.mp_lock  # type: ignore[assignment]
+
+    return limiter
+
+
 def create_rate_limiter_factory(
     requests_per_second: int,
     max_delay_seconds: int,
@@ -60,6 +72,11 @@ def create_rate_limiter_factory(
         return partial(
             create_sqlite_limiter, rate, use_fileLock=True, max_delay=max_delay
         )
+    elif backend == "mp_limiter":
+        bucket = MultiprocessBucket.init([rate])
+        return partial(
+            create_mp_limiter, max_delay=max_delay, bucket=bucket
+        )
     else:
         raise ValueError(f"Unexpected backend option: {backend}")
 
@@ -71,10 +88,9 @@ def task():
     assert SHARED_LIMITER is not None, "Limiter not initialized"
 
     try:
-        acquired = SHARED_LIMITER.try_acquire("task")
-
-        if not acquired:
-            raise ValueError("Failed to acquire")
+        while not SHARED_LIMITER.try_acquire("task"):
+            # Keep trying
+            pass
     except Exception as e:
         logger.exception(e)
 
@@ -163,7 +179,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    for backend in ["default", "sqlite", "sqlite_filelock"]:
+    for backend in ["mp_limiter"]:  # "default", "sqlite", "sqlite_filelock",
         backend = cast(Literal["default", "sqlite", "sqlite_filelock"], backend)
         for requests_per_second in requests_per_second_list:
             logger.info(f"Testing with {backend=}, {requests_per_second=}")
@@ -179,7 +195,7 @@ if __name__ == "__main__":
             test_results.append(result)
 
     logger.info("Testing Multiprocessing")
-    for backend in ["sqlite_filelock"]:
+    for backend in ["sqlite_filelock", "mp_limiter"]:
         backend = cast(Literal["default", "sqlite", "sqlite_filelock"], backend)
 
         for requests_per_second in requests_per_second_list:
