@@ -88,6 +88,33 @@ async def create_mp_bucket(rates: List[Rate]):
 
 
 async def create_sqlite_bucket(rates: List[Rate], file_lock: bool = False):
+    temp_dir = Path(gettempdir())
+    default_db_path = temp_dir / f"pyrate_limiter_{id_generator(size=5)}.sqlite"
+    logger.info("SQLite db path: %s", default_db_path)
+    table_name = f"pyrate-test-bucket-{id_generator(size=10)}"
+    index_name = table_name + "__timestamp_index"
+
+    conn = sqlite3.connect(
+        default_db_path,
+        isolation_level="EXCLUSIVE",
+        check_same_thread=False,
+    )
+    drop_table_query = Queries.DROP_TABLE.format(table=table_name)
+    drop_index_query = Queries.DROP_INDEX.format(index=index_name)
+
+    cur = conn.execute(drop_table_query)
+    cur.execute(drop_index_query)
+    cur.close()
+    conn.commit()
+
+    bucket = SQLiteBucket.init_from_file(
+        rates, table_name, db_path=str(default_db_path), use_file_lock=file_lock
+    )
+
+    return bucket
+
+
+async def create_sqlite_bucket(rates: List[Rate], file_lock: bool = False):
 
     temp_dir = Path(gettempdir())
     default_db_path = temp_dir / f"pyrate_limiter_{id_generator(size=5)}.sqlite"

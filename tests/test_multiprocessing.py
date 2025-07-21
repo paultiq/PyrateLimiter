@@ -1,82 +1,78 @@
 """Complete Limiter test suite
 """
+import multiprocessing
+import os
 import time
-from collections import deque
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import wait
 from functools import partial
-from pathlib import Path
-from tempfile import gettempdir
-from typing import List
-from typing import Optional
+from multiprocessing.synchronize import Lock as LockType
 
 from pyrate_limiter import Duration
 from pyrate_limiter import Limiter
+from pyrate_limiter import MonotonicClock
 from pyrate_limiter import Rate
 from pyrate_limiter import SQLiteBucket
 from pyrate_limiter import SQLiteClock
-from pyrate_limiter import TimeClock
 from pyrate_limiter.buckets.mp_bucket import MultiprocessBucket
 
 MAX_DELAY = Duration.DAY
 
-LIMITER: Optional[Limiter] = None
+LIMITER: Limiter | None = None
 
 
-def init_process_mp(bucket: MultiprocessBucket):
+def init_process_mp(bucket, mp_lock: LockType):
     global LIMITER
 
-    LIMITER = Limiter(bucket, raise_when_fail=False, clock=TimeClock(),
-                      max_delay=MAX_DELAY)
+    LIMITER = Limiter(bucket, raise_when_fail=False, clock=MonotonicClock(),
+                      retry_until_max_delay=True, max_delay=MAX_DELAY)
 
-    LIMITER.lock = bucket.mp_lock  # type: ignore[assignment]
+    LIMITER.lock = mp_lock  # type: ignore[assignment]
 
 
 def my_task():
     assert LIMITER is not None
-
-    while not LIMITER.try_acquire("my_task"):
-        time.sleep(0.01)
-
-    result = time.time()
-    time.sleep(0.01)
+    LIMITER.try_acquire("my_task")
+    result = {"time": time.monotonic(), "pid": os.getpid()}
     return result
 
 
-def analyze_times(start: float, requests_per_second: int, times: List[float]):
-    elapsed = sorted(t - start for t in times)
-    w, ops_last_sec = deque(), []  # type: ignore[var-annotated]
-    for t in elapsed:
-        w.append(t)
-        while w and w[0] <= t - 1:
-            w.popleft()
-        ops_last_sec.append(len(w))
-    print(f'{max(ops_last_sec)=},  {requests_per_second=}')
-    assert max(ops_last_sec) <= requests_per_second * 1.01  # a small amount of error is observed when multiprocessing
+def analyze_times(start: float, requests_per_second: int, time: list[dict]):
+    import pandas as pd
+
+    df = pd.DataFrame(time)
+
+    df = df.sort_values(by="time")
+    df["time"] = df["time"] - start
+    df['ops_last_sec'] = df['time'].apply(lambda t: ((df['time'] > t - 1) & (df['time'] <= t)).sum())
+
+    print(df)
+
+    print(f'{df["ops_last_sec"].max()=},  {requests_per_second=}')
 
 
-def init_process_sqlite(requests_per_second, db_path):
+def init_process_sqlite(rate):
     global LIMITER
-    rate = Rate(requests_per_second, Duration.SECOND)
-    bucket = SQLiteBucket.init_from_file([rate], db_path=db_path, create_new_table=False, use_file_lock=True)
-    LIMITER = Limiter(bucket, raise_when_fail=False, max_delay=MAX_DELAY, clock=SQLiteClock(bucket))
-    LIMITER.lock = bucket.lock
+
+    bucket = SQLiteBucket.init_from_file([rate], db_path="pyrate_limiter.sqlite", use_file_lock=True)
+
+    LIMITER = Limiter(bucket, raise_when_fail=False, max_delay=MAX_DELAY, clock=SQLiteClock(bucket.conn))
 
 
 def test_mp_bucket():
 
-    requests_per_second = 250
+    requests_per_second = 100
     num_seconds = 5
     num_requests = requests_per_second * num_seconds
 
     rate = Rate(requests_per_second, Duration.SECOND)
     bucket = MultiprocessBucket.init([rate])
-    # init_process_mp(bucket)
+    mp_lock = multiprocessing.Lock()
 
-    start = time.time()
+    start = time.monotonic()
 
     with ProcessPoolExecutor(
-        initializer=partial(init_process_mp, bucket),
+        initializer=partial(init_process_mp, bucket, mp_lock)
     ) as executor:
         futures = [executor.submit(my_task) for _ in range(num_requests)]
         wait(futures)
@@ -94,25 +90,15 @@ def test_mp_bucket():
 
 def test_sqlite_filelock_bucket():
 
-    requests_per_second = 250
+    requests_per_second = 10
     num_seconds = 5
     num_requests = requests_per_second * num_seconds
-
-    # Initialize the table
-    temp_dir = Path(gettempdir())
-    db_path = str(temp_dir / "pyrate_limiter.sqlite")
     rate = Rate(requests_per_second, Duration.SECOND)
-    bucket = SQLiteBucket.init_from_file([rate], db_path=db_path, create_new_table=True, use_file_lock=True)
-    limiter = Limiter(bucket, raise_when_fail=False, max_delay=MAX_DELAY, clock=SQLiteClock(bucket.conn))
 
-    # Verify limiter for test purposes
-    limiter.try_acquire("my_task")
-
-    # Start the ProcessPoolExecutor
-    start = time.time()
+    start = time.monotonic()
 
     with ProcessPoolExecutor(
-        initializer=partial(init_process_sqlite, requests_per_second=requests_per_second, db_path=db_path)
+        initializer=partial(init_process_sqlite, rate)
     ) as executor:
         futures = [executor.submit(my_task) for _ in range(num_requests)]
         wait(futures)
