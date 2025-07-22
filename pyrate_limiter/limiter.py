@@ -275,14 +275,11 @@ class Limiter:
 
         return _handle_result(acquire)  # type: ignore
 
-    def _get_async_lock(self):
-        """Must be called before first try_acquire_async for each thread"""
-        try:
-            return self._thread_local.async_lock
-        except AttributeError:
-            lock = asyncio.Lock()
-            self._thread_local.async_lock = lock
-            return lock
+    async def _get_async_lock(self):
+        if not hasattr(self._thread_local, "async_lock"):
+            logger.info("Creating async_lock for thread")
+            self._thread_local.async_lock = asyncio.Lock()
+        return self._thread_local.async_lock
 
     async def try_acquire_async(self, name: str, weight: int = 1) -> Union[bool, Awaitable[bool]]:
         """
@@ -292,13 +289,12 @@ class Limiter:
 
             This does not make the entire code async: use an async bucket for that.
         """
-        async with self._get_async_lock():
+        async with await self._get_async_lock():
             acquired = self.try_acquire(name=name, weight=weight)
 
             if isawaitable(acquired):
                 return await acquired
             else:
-                logger.warning("async call made without an async bucket.")
                 return acquired
 
     def try_acquire(self, name: str, weight: int = 1) -> Union[bool, Awaitable[bool]]:
