@@ -95,11 +95,7 @@ def test_mp_bucket():
 def initialize_sqlite(requests_per_second: int, db_path: str):
     # Initialize the table
     rate = Rate(requests_per_second, Duration.SECOND)
-    bucket = SQLiteBucket.init_from_file([rate], db_path=db_path, create_new_table=True, use_file_lock=True)
-    limiter = Limiter(bucket, raise_when_fail=False, max_delay=MAX_DELAY, clock=SQLiteClock(bucket.conn))
-
-    # Verify limiter for test purposes
-    limiter.try_acquire("my_task")
+    SQLiteBucket.init_from_file([rate], db_path=db_path, create_new_table=True, use_file_lock=True)
 
 
 def test_sqlite_filelock_bucket():
