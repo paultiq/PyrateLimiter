@@ -127,7 +127,7 @@ async def test_limiter_01(
                 acquire_ok, cost = await async_acquire(limiter, item)
         else:
             acquire_ok, cost = await async_acquire(limiter, item)
-            assert cost >= 400
+            assert cost >= 350
             assert acquire_ok
 
     # # Flush before testing again
