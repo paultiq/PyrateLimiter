@@ -89,6 +89,7 @@ class Limiter:
     retry_until_max_delay: bool
     max_delay: Optional[int] = None
     lock: Union[RLock, Iterable]
+    buffer_ms: int = 5  # when delaying, adds a little safety margin to handle clock jitter
 
     # async_lock is thread local, created on first use
     _thread_local: local
@@ -221,7 +222,7 @@ class Limiter:
                 assert isinstance(delay, int), "Delay not integer"
 
                 total_delay = 0
-                delay += 50
+                delay += self.buffer_ms
 
                 while True:
                     total_delay += delay
@@ -275,7 +276,7 @@ class Limiter:
             delay = bucket.waiting(item)
             assert isinstance(delay, int)
 
-            delay += 50
+            delay += self.buffer_ms
             total_delay += delay
 
             if self.max_delay is not None and total_delay > self.max_delay:
