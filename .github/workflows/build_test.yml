@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - master
+  workflow-dispatch:
 
 env:
   LATEST_PY_VERSION: '3.13'
