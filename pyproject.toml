@@ -36,12 +36,12 @@ all = [
     "psycopg[pool]>=3.1.18,<4",
 ]
 docs = [
-    "furo>=2022.3.4,<2023",
-    "myst-parser>=0.17",
-    "sphinx>=4.3.0,<5",
-    "sphinx-autodoc-typehints~=1.17",
-    "sphinx-copybutton>=0.5",
-    "sphinxcontrib-apidoc>=0.3,<0.4",
+    "furo",
+    "myst-parser",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-copybutton",
+    "sphinxcontrib-apidoc",
 ]
 dev = [
     "dunamai",
