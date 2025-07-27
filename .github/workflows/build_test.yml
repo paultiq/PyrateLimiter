@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.9", "3.13"]
+        python-version: ["3.9", "3.13", "3.14"]
     steps:
     - name: Check out code
       uses: actions/checkout@v4
@@ -64,6 +64,10 @@ jobs:
         uv run nox -e lint
     - name: Build and install package, if this is latest
       run: |
+        # update version
+        version=$(uv version)  # or use grep/toml parsing
+        echo "__version__ = '${version}'" > pyrate_limiter/__version__.py
+        echo version = $version
         uv build
         uv pip install dist/*.whl
     # Run tests and coverage report (all python versions)
