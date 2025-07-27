@@ -28,6 +28,7 @@ extensions = [
 ]
 
 myst_enable_extensions = ["html_image"]
+myst_heading_anchors = 6
 
 # Enable automatic links to other projects' Sphinx docs
 intersphinx_mapping = {
