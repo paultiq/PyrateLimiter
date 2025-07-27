@@ -89,7 +89,7 @@ for i in range(6):
         print(err, err.meta_info)
 ```
 
-Note: You can simplify initialization by using the factory functions provided in [limiter_factory](,.pyrate_limiter/limiter_factory.py), including
+Note: You can simplify initialization by using the factory functions provided in [limiter_factory](./pyrate_limiter/limiter_factory.py), including
 `create_sqlite_limiter()` or `create_inmemory_limiter()`.
 
 ## Basic Usage
@@ -600,7 +600,7 @@ Options:
 - `db_path`: If not provided, uses `tempdir / "pyrate-limiter.sqlite"`
 - `use_file_lock`: Should be False for single process workloads. For multi process, uses a [filelock](https://pypi.org/project/filelock/) to ensure single access to the SQLite bucket across multiple processes, allowing multi process rate limiting on a single host.
 
-Example: [limiter_factory.py::create_sqlite_limiter()](,.pyrate_limiter/limiter_factory.py)
+Example: [limiter_factory.py::create_sqlite_limiter()](./pyrate_limiter/limiter_factory.py)
 
 #### PostgresBucket
 
@@ -624,7 +624,7 @@ The BucketAsyncWrapper wraps a sync bucket to ensure all its methods return awai
 asynchronous behavior and use asyncio.sleep() instead of time.sleep() during delay handling,
 preventing blocking of the asyncio event loop.
 
-Example: [limiter_factory.py::create_inmemory_limiter()](,.pyrate_limiter/limiter_factory.py)
+Example: [limiter_factory.py::create_inmemory_limiter()](./pyrate_limiter/limiter_factory.py)
 
 ### Async or Sync or Multiprocessing
 
