@@ -45,6 +45,7 @@ Documentation = "https://pyrate-limiter.readthedocs.io"
 
 [dependency-groups]
 dev = [
+    "dunamai",
     "coverage==6",
     "flake8_polyfill>=1.0.2,<2",
     "nox~=2025.5",
