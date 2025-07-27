@@ -25,7 +25,7 @@ Full project documentation can be found at [pyratelimiter.readthedocs.io](https:
     - [Defining clock & routing logic](#defining-clock--routing-logic-with-bucketfactory)
     - [Wrapping all up with Limiter](#wrapping-all-up-with-limiter)
     - [asyncio and event loops](#asyncio-and-event-loops)
-    - [Decorators](#as_decorator-use-limiter-as-decorator)
+    - [`as_decorator()`: use limiter as decorator](#as_decorator-use-limiter-as-decorator)
     - [Limiter API](#limiter-api)
     - [Weight](#weight)
     - [Handling exceeded limits](#handling-exceeded-limits)
@@ -39,7 +39,7 @@ Full project documentation can be found at [pyratelimiter.readthedocs.io](https:
       - [RedisBucket](#redisbucket)
       - [PostgresBucket](#postgresbucket)
       - [BucketAsyncWrapper](#bucketasyncwrapper)
-    - [Async or Sync?](#async-or-sync)
+    - [Async or Sync or Multiprocessing](#async-or-sync-or-multiprocessing)
   - [Advanced Usage](#advanced-usage)
     - [Component-level Diagram](#component-level-diagram)
     - [Time sources](#time-sources)
@@ -393,7 +393,7 @@ Yet, putting this big, heavy item into bucket is expected to be transactional & 
 
 Any additional, custom implementation of Bucket are expected to behave alike - as we have unit tests to cover the case.
 
-See [Advanced usage options](#advanced-usage) below for more details.
+See [Advanced Usage](#advanced-usage) below for more details.
 
 ### Handling exceeded limits
 
