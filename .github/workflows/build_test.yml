@@ -68,7 +68,7 @@ jobs:
         args: --style semver
     - name: Fail if version is 0.0.0
       run: |
-        if [ "$PROJECT_VERSION" = "0.0.0" ]; then
+        if [[ "$PROJECT_VERSION" == 0.0.0* ]]; then
           echo "Invalid version: $PROJECT_VERSION"
           exit 1
         fi
