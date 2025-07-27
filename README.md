@@ -299,7 +299,7 @@ If your bucket isn't async, wrap it with `BucketAsyncWrapper`. This ensures `asy
 await limiter.try_acquire_async(item)
 ```
 
-Example: [asyncio_ratelimit.py](examples/asyncio_ratelimit.py)
+Example: [asyncio_ratelimit.py](https://github.com/vutran1710/PyrateLimiter/blob/master/examples/asyncio_ratelimit.py)
 
 
 #### `as_decorator()`: use limiter as decorator
@@ -341,7 +341,7 @@ async def async_request_function(some_number: int):
     requests.get('https://example.com')
 ```
 
-For full example see [asyncio_decorator.py](examples/asyncio_decorator.py)
+For full example see [asyncio_decorator.py](https://github.com/vutran1710/PyrateLimiter/blob/master/examples/asyncio_decorator.py)
 
 
 ### Limiter API
@@ -522,7 +522,7 @@ MultiprocessBucket uses a ListProxy to store items within a python multiprocessi
 
 The bucket is shared across instances.
 
-An example is provided in [in_memory_multiprocess](examples/in_memory_multiprocess.py)
+An example is provided in [in_memory_multiprocess](https://github.com/vutran1710/PyrateLimiter/blob/master/examples/in_memory_multiprocess.py)
 
 Whenever multiprocessing, bucket.waiting calculations will be often wrong because of the concurrency involved. Set Limiter.retry_until_max_delay=True so that the
 item keeps retrying rather than returning False when contention causes an extra delay.
