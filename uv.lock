@@ -689,6 +689,7 @@ dev = [
     { name = "schedule" },
     { name = "sphinx" },
     { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
 ]
 
 [package.metadata]
@@ -721,6 +722,7 @@ dev = [
     { name = "schedule", specifier = ">=1.1.0,<2" },
     { name = "sphinx", specifier = ">=4.5.0" },
     { name = "sphinx-autodoc-typehints", specifier = ">=1.19.1" },
+    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
 ]
 
 [[package]]

@@ -44,6 +44,13 @@ Repository = "https://github.com/vutran1710/PyrateLimiter"
 Documentation = "https://pyrate-limiter.readthedocs.io"
 
 [dependency-groups]
+docs = [
+  "sphinx",
+  "sphinx-autodoc-typehints",
+  "sphinx-copybutton",
+  "sphinxcontrib-apidoc",
+  "myst-parser"
+]
 dev = [
     "dunamai",
     "coverage==6",
@@ -57,8 +64,6 @@ dev = [
     "pytest-cov>=4.1.0,<5",
     "pytest-xdist>=2.5.0,<3",
     "schedule>=1.1.0,<2",
-    "sphinx>=4.5.0",
-    "sphinx-autodoc-typehints>=1.19.1",
 ]
 
 

@@ -7,6 +7,7 @@ build:
     python: "3.12"
   commands:
     - pip install uv
+    - uv sync --group docs
     - uv run python -m sphinx docs $READTHEDOCS_OUTPUT/html -b html -W
 
 sphinx:
