@@ -688,6 +688,7 @@ dev = [
     { name = "pytest-xdist" },
     { name = "schedule" },
     { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
 ]
 
 [package.metadata]
@@ -719,6 +720,7 @@ dev = [
     { name = "pytest-xdist", specifier = ">=2.5.0,<3" },
     { name = "schedule", specifier = ">=1.1.0,<2" },
     { name = "sphinx", specifier = ">=4.5.0" },
+    { name = "sphinx-autodoc-typehints", specifier = ">=1.19.1" },
 ]
 
 [[package]]
