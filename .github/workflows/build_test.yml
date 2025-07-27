@@ -46,7 +46,8 @@ jobs:
       with:
         fetch-depth: 0
         fetch-tags: true
-    - run: git fetch --tags --force
+    # - run: |
+    #     git fetch upstream --tags --force
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
