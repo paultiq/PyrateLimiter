@@ -687,9 +687,14 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
     { name = "schedule" },
+]
+docs = [
+    { name = "furo" },
+    { name = "myst-parser" },
     { name = "sphinx" },
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-copybutton" },
+    { name = "sphinxcontrib-apidoc" },
 ]
 
 [package.metadata]
@@ -720,9 +725,14 @@ dev = [
     { name = "pytest-cov", specifier = ">=4.1.0,<5" },
     { name = "pytest-xdist", specifier = ">=2.5.0,<3" },
     { name = "schedule", specifier = ">=1.1.0,<2" },
-    { name = "sphinx", specifier = ">=4.5.0" },
-    { name = "sphinx-autodoc-typehints", specifier = ">=1.19.1" },
-    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
+]
+docs = [
+    { name = "furo" },
+    { name = "myst-parser" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinxcontrib-apidoc" },
 ]
 
 [[package]]
