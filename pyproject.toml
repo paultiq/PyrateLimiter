@@ -23,7 +23,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-[project.optional-dependencies]
+
+[project.urls]
+Homepage = "https://github.com/vutran1710/PyrateLimiter"
+Repository = "https://github.com/vutran1710/PyrateLimiter"
+Documentation = "https://pyrate-limiter.readthedocs.io"
+
+[dependency-groups]
 all = [
     "filelock>=3.0",
     "redis>=5.0.0,<6",
@@ -36,21 +42,6 @@ docs = [
     "sphinx-autodoc-typehints~=1.17",
     "sphinx-copybutton>=0.5",
     "sphinxcontrib-apidoc>=0.3,<0.4",
-]
-
-[project.urls]
-Homepage = "https://github.com/vutran1710/PyrateLimiter"
-Repository = "https://github.com/vutran1710/PyrateLimiter"
-Documentation = "https://pyrate-limiter.readthedocs.io"
-
-[dependency-groups]
-docs = [
-  "sphinx",
-  "sphinx-autodoc-typehints",
-  "sphinx-copybutton",
-  "sphinxcontrib-apidoc",
-  "myst-parser",
-  "furo"
 ]
 dev = [
     "dunamai",
