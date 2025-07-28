@@ -15,10 +15,10 @@ from pyrate_limiter.buckets import InMemoryBucket
 
 class MultiprocessBucket(InMemoryBucket):
 
-    items: List[RateItem]  # ListProxy
+    items: List[float]  # ListProxy
     mp_lock: LockType
 
-    def __init__(self, rates: List[Rate], items: List[RateItem], mp_lock: LockType):
+    def __init__(self, rates: List[Rate], items: List[float], mp_lock: LockType):
 
         if not isinstance(items, ListProxy):
             raise ValueError("items must be a ListProxy")
@@ -46,7 +46,7 @@ class MultiprocessBucket(InMemoryBucket):
         """
         Creates a single ListProxy so that this bucket can be shared across multiple processes.
         """
-        shared_items: List[RateItem] = Manager().list()  # type: ignore[assignment]
+        shared_items: List[float] = Manager().list()  # type: ignore[assignment]
 
         mp_lock: LockType = RLock()
 

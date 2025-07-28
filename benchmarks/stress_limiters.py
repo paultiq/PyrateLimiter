@@ -186,7 +186,7 @@ if __name__ == "__main__":
     )
 
     for backend in ["default", "sqlite", "mp_limiter"]:
-        backend = cast(Literal["default", "sqlite", "sqlite_filelock", "mp_limiter"], backend)
+        backend = cast(Literal["default", "sqlite"], backend)
         for requests_per_second in requests_per_second_list:
             logger.info(f"Testing with {backend=}, {requests_per_second=}")
             limiter_creator = create_rate_limiter_factory(

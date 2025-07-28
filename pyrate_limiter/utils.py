@@ -6,10 +6,9 @@ from tempfile import gettempdir
 from typing import List
 
 from .abstracts import Rate
-from .abstracts import RateItem
 
 
-def binary_search(items: List[RateItem], value: int) -> int:
+def binary_search(items: List[float], value: int) -> int:
     """Find the index of item in list where left.timestamp < value <= right.timestamp
     this is to determine the current size of some window that
     stretches from now back to  lower-boundary = value and
@@ -17,10 +16,10 @@ def binary_search(items: List[RateItem], value: int) -> int:
     if not items:
         return 0
 
-    if value > items[-1].timestamp:
+    if value > items[-1]:
         return -1
 
-    if value <= items[0].timestamp:
+    if value <= items[0]:
         return 0
 
     if len(items) == 2:
@@ -30,7 +29,7 @@ def binary_search(items: List[RateItem], value: int) -> int:
 
     while left_pointer <= right_pointer:
         mid = (left_pointer + right_pointer) // 2
-        left, right = items[mid - 1].timestamp, items[mid].timestamp
+        left, right = items[mid - 1], items[mid]
 
         if left < value <= right:
             break

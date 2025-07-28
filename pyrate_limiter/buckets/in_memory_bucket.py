@@ -18,7 +18,7 @@ class InMemoryBucket(AbstractBucket):
     Usecase: small applications, simple logic
     """
 
-    items: List[RateItem]
+    items: List[float]
     failing_rate: Optional[Rate]
 
     def __init__(self, rates: List[Rate]):
@@ -52,9 +52,9 @@ class InMemoryBucket(AbstractBucket):
         self.failing_rate = None
 
         if item.weight > 1:
-            self.items.extend([item for _ in range(item.weight)])
+            self.items.extend([item.timestamp for _ in range(item.weight)])
         else:
-            self.items.append(item)
+            self.items.append(item.timestamp)
 
         return True
 
@@ -64,16 +64,16 @@ class InMemoryBucket(AbstractBucket):
             max_interval = self.rates[-1].interval
             lower_bound = current_timestamp - max_interval
 
-            if lower_bound > self.items[-1].timestamp:
+            if lower_bound > self.items[-1]:
                 remove_count = len(self.items)
                 del self.items[:]
                 return remove_count
 
-            if lower_bound < self.items[0].timestamp:
+            if lower_bound < self.items[0]:
                 return 0
 
             idx = binary_search(self.items, lower_bound)
-            del self.items[:idx]
+            self.items = self.items[idx:]
             return idx
 
         return 0
@@ -89,4 +89,8 @@ class InMemoryBucket(AbstractBucket):
         if not self.items:
             return None
 
-        return self.items[-1 - index] if abs(index) < self.count() else None
+        if abs(index) < self.count():
+            timestamp = self.items[-1 - index]
+            return RateItem("n/a", timestamp=int(timestamp), weight=-1)
+        else:
+            return None
