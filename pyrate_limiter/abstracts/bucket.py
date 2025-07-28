@@ -302,3 +302,11 @@ class BucketFactory(ABC):
             return False
 
         return self._leaker.deregister(bucket)
+
+    def __del__(self):
+        # Make sure all leakers are deregistered
+        for bucket in self.get_buckets():
+            try:
+                self.dispose(bucket)
+            except Exception as e:
+                logger.debug("Exception %s deleting bucket", e)
