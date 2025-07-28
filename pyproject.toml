@@ -56,6 +56,7 @@ dev = [
     "pytest-cov>=6.2.1",
     "pytest-xdist>=3.8.0",
     "schedule>=1.1.0,<2",
+    "pytest-retry>=1.7.0",
 ]
 
 
@@ -95,3 +96,7 @@ source-include = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+retries = 2
+retry_delay = 1
+cumulative_timing = false
+retry_outcome = "rerun"
