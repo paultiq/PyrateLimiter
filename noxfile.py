@@ -10,7 +10,7 @@ PYTEST_MP2_ARGS = ["--verbose", "--cov=pyrate_limiter", "--cov-append", "--maxfa
                    "--ignore=tests/test_multiprocessing.py"]
 
 # Reduce # of cores to 3: one less than GHA runner's cores: timing tests are sensitive to high load
-PYTEST_ARGS = ["--verbose", "--maxfail=1", "-m", "not mpbucket", "--numprocesses=3", "--dist loadfile",
+PYTEST_ARGS = ["--verbose", "--maxfail=1", "-m", "not mpbucket", "--numprocesses=3",
                "--ignore=tests/test_multiprocessing.py"]
 COVERAGE_ARGS = ["--cov=pyrate_limiter", "--cov-append", "--cov-report=term", "--cov-report=xml", "--cov-report=html"]
 
