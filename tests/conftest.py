@@ -31,9 +31,9 @@ logger.setLevel(getenv("LOG_LEVEL", "INFO"))
 DEFAULT_RATES = [Rate(3, 1000), Rate(4, 1500)]
 
 clocks = [
-    MonotonicClock(),
-    TimeClock(),
-    TimeAsyncClock(),
+    pytest.param(MonotonicClock(), marks=pytest.mark.monotonic),
+    pytest.param(TimeClock(), marks=pytest.mark.timeclock),
+    pytest.param(TimeAsyncClock(), marks=pytest.mark.asyncclock),
 ]
 
 ClockSet = Union[
@@ -108,7 +108,7 @@ async def create_filelocksqlite_bucket(rates: List[Rate]):
 async def create_postgres_bucket(rates: List[Rate]):
     from psycopg_pool import ConnectionPool as PgConnectionPool
 
-    pool = PgConnectionPool("postgresql://postgres:postgres@localhost:5432")
+    pool = PgConnectionPool("postgresql://postgres:postgres@localhost:5432", open=True)
     table = f"test_bucket_{id_generator()}"
     bucket = PostgresBucket(pool, table, rates)
     assert bucket.count() == 0
@@ -123,7 +123,7 @@ async def create_postgres_bucket(rates: List[Rate]):
         create_async_redis_bucket,
         create_postgres_bucket,
         create_filelocksqlite_bucket,
-        create_mp_bucket
+        pytest.param(create_mp_bucket, marks=pytest.mark.mpbucket)
     ]
 )
 def create_bucket(request):

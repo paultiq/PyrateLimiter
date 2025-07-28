@@ -1,0 +1,113 @@
+name: Python package - UV
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  LATEST_PY_VERSION: '3.13'
+  REDIS: 'redis://localhost:6379'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      pyrate_redis:
+        image: bitnami/redis:latest
+        env:
+          ALLOW_EMPTY_PASSWORD: yes
+        ports:
+          - 6379:6379
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      pyrate_postgres:
+        image: bitnami/postgresql
+        env:
+          ALLOW_EMPTY_PASSWORD: yes
+          POSTGRESQL_PASSWORD: postgres
+          POSTGRESQL_MAX_CONNECTIONS: 1000
+        ports:
+          - 5432:5432
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.9", "3.13", "3.14", "3.14t"]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+        python-version: ${{ matrix.python-version }}
+    - uses: mtkennerly/dunamai-action@v1
+      with:
+        env-var: PROJECT_VERSION
+        args: --style semver
+    - name: Update __version__ and pyproject.toml
+      run: |
+        if [[ "$PROJECT_VERSION" == 0.0.0* ]]; then
+          echo "Invalid version: $PROJECT_VERSION"
+          exit 1
+        fi
+        echo "__version__ = '${PROJECT_VERSION}'" > pyrate_limiter/_version.py
+        echo update project version. This has side benefit of validating the pyproject.toml TOML.
+        uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $PROJECT_VERSION
+        echo _version.py is:
+        cat pyrate_limiter/_version.py
+        echo pyproject.toml version is
+        grep version pyproject.toml
+    - name: Install dependencies
+      run: uv sync --all-groups --all-extras
+    # Run linting (latest python version only)
+    - name: Lint
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      run: |
+        uv run nox -e lint
+    - name: Build and install package
+      run: |
+        uv build
+        uv pip install dist/*.whl
+    # Run tests and coverage report (all python versions)
+    - name: Test and Coverage
+      run: |
+        uv run nox -e cover
+    # Latest python version: send coverage report to codecov
+    - name: "Upload coverage report to Codecov"
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      uses: codecov/codecov-action@v2
+
+    - name: Upload dist, if this is latest
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/master'
+    steps:
+    - name: Download dist
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist
+    - name: Upload package to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
