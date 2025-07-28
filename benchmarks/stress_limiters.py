@@ -185,7 +185,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    for backend in ["default", "sqlite", "mp_limiter"]:
+    for backend in ["default", "sqlite"]:
         backend = cast(Literal["default", "sqlite"], backend)
         for requests_per_second in requests_per_second_list:
             logger.info(f"Testing with {backend=}, {requests_per_second=}")
