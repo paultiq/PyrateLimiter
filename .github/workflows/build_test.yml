@@ -45,6 +45,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -55,6 +56,23 @@ jobs:
       with:
         enable-cache: true
         python-version: ${{ matrix.python-version }}
+    - uses: mtkennerly/dunamai-action@v1
+      with:
+        env-var: PROJECT_VERSION
+        args: --style semver
+    - name: Update __version__ and pyproject.toml
+      run: |
+        if [[ "$PROJECT_VERSION" == 0.0.0* ]]; then
+          echo "Invalid version: $PROJECT_VERSION"
+          exit 1
+        fi
+        echo "__version__ = '${PROJECT_VERSION}'" > pyrate_limiter/_version.py
+        echo update project version. This has side benefit of validating the pyproject.toml TOML.
+        uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $PROJECT_VERSION
+        echo _version.py is:
+        cat pyrate_limiter/_version.py
+        echo pyproject.toml version is
+        grep version pyproject.toml
     - name: Install dependencies
       run: uv sync --all-groups --all-extras
     # Run linting (latest python version only)
@@ -62,7 +80,7 @@ jobs:
       if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
       run: |
         uv run nox -e lint
-    - name: Build and install package, if this is latest
+    - name: Build and install package
       run: |
         uv build
         uv pip install dist/*.whl

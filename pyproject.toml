@@ -1,6 +1,6 @@
 [project]
 name = "pyrate-limiter"
-dynamic = ["version"]
+version = "0.0.0"
 description = "Python Rate-Limiter using Leaky-Bucket Algorithm"
 authors = [{ name = "vutr", email = "me@vutr.io" }]
 requires-python = ">=3.9"
@@ -23,20 +23,6 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-[project.optional-dependencies]
-all = [
-    "filelock>=3.0",
-    "redis>=5.0.0,<6",
-    "psycopg[pool]>=3.1.18,<4",
-]
-docs = [
-    "furo>=2022.3.4,<2023",
-    "myst-parser>=0.17",
-    "sphinx>=4.3.0,<5",
-    "sphinx-autodoc-typehints~=1.17",
-    "sphinx-copybutton>=0.5",
-    "sphinxcontrib-apidoc>=0.3,<0.4",
-]
 
 [project.urls]
 Homepage = "https://github.com/vutran1710/PyrateLimiter"
@@ -44,17 +30,31 @@ Repository = "https://github.com/vutran1710/PyrateLimiter"
 Documentation = "https://pyrate-limiter.readthedocs.io"
 
 [dependency-groups]
+all = [
+    "filelock>=3.0",
+    "redis>=6.2.0",
+    "psycopg[pool]>=3.2.9",
+]
+docs = [
+    "furo",
+    "myst-parser",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-copybutton",
+    "sphinxcontrib-apidoc",
+]
 dev = [
-    "coverage==6",
+    "dunamai>=1.25.0",
+    "coverage>=7.10.1",
     "flake8_polyfill>=1.0.2,<2",
     "nox~=2025.5",
     "nox-poetry>=1.0",
-    "pre-commit>=2.17.0,<3",
-    "psycopg[pool]>=3.1.18,<4",
-    "pytest>=8.3",
-    "pytest-asyncio>=0.24",
-    "pytest-cov>=4.1.0,<5",
-    "pytest-xdist>=2.5.0,<3",
+    "pre-commit>=4.2.0",
+    "psycopg[pool]>=3.2.9",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
+    "pytest-xdist>=3.8.0",
     "schedule>=1.1.0,<2",
 ]
 
@@ -77,23 +77,14 @@ output = 'test-reports/coverage.xml'
 [tool.ipdb]
 context = 7
 
-
 [build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.8.3,<0.9.0"]
+build-backend = "uv_build"
 
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
-
-[tool.hatch.build.hooks.version]
-path = "pyrate_limiter/_version.py"
-template = '''
-__version__ = "{version}"
-'''
-
-
-[tool.hatch.build.targets.sdist]
-include = [
+[tool.uv.build-backend]
+module-name = "pyrate_limiter"
+module-root = ""
+source-include = [
     "LICENSE",
     "CHANGELOG.md",
     "examples",
@@ -101,8 +92,6 @@ include = [
     "tests",
 ]
 
-[tool.hatch.build.targets.wheel]
-include = ["pyrate_limiter"]
-
-[tool.hatch.build.targets.wheel.sources]
-"./pyrate_limiter" = "pyrate_limiter"
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
