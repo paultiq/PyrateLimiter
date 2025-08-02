@@ -17,7 +17,7 @@ def mapping(name, weight, i):
     return "mytask", 1
 
 
-async def main():
+async def test_asyncio_decorator():
     print("Running task_async using try_acquire_async and AsyncBucketWrapper")
     print("Note that the TICKs continue while the tasks are waiting")
 
@@ -33,4 +33,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(test_asyncio_decorator())

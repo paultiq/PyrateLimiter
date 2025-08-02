@@ -41,13 +41,7 @@ def my_task():
     return result
 
 
-if __name__ == "__main__":
-    logging.basicConfig(
-        format="%(asctime)s %(name)s %(levelname)-8s %(message)s",
-        level=logging.INFO,
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
+def test_sqlite_filelock_multiprocess():
     # prime the rates, to show realistic rates
     init_process()
     assert LIMITER is not None
@@ -72,3 +66,12 @@ if __name__ == "__main__":
     end = time.monotonic()
 
     print(f"Completed {NUM_REQUESTS=} in {end - start} seconds, at a rate of {REQUESTS_PER_SECOND=}")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s %(name)s %(levelname)-8s %(message)s",
+        level=logging.INFO,
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    test_sqlite_filelock_multiprocess()
