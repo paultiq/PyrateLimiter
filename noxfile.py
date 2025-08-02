@@ -1,3 +1,5 @@
+from glob import glob
+
 import nox
 from nox_poetry import session
 
@@ -32,14 +34,14 @@ def cover(session) -> None:
     session.run("pytest", *PYTEST_MP2_ARGS)
 
     # Everything else - concurrent
-    session.run("pytest", *PYTEST_ARGS, *COVERAGE_ARGS, "tests", "examples/*")
+    session.run("pytest", *PYTEST_ARGS, *COVERAGE_ARGS, "tests", *glob("examples/*.py"))
 
 
 @session(python=False)
 def test(session) -> None:
     session.run("pytest", *PYTEST_MP_ARGS)
     session.run("pytest", *PYTEST_MP2_ARGS)
-    session.run("pytest", *PYTEST_ARGS, "tests", "examples/*")
+    session.run("pytest", *PYTEST_ARGS, "tests", *glob("examples/*.py"))
 
 
 @session(python=False)
