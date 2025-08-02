@@ -27,7 +27,9 @@ async def test_asyncio_decorator():
     start = time.time()
     limiter = create_inmemory_limiter(async_wrapper=True)
 
-    @limiter.as_decorator()(lambda name, weight: (name, weight))  # type: ignore[arg-type]
+    limiter_decorator = limiter.as_decorator()(lambda name, weight: (name, weight))  # type: ignore[arg-type]
+
+    @limiter_decorator
     async def task_async(name: str, weight: int):
         print(f"try_acquire_async: {datetime.now()} {name}: {weight}")
 
