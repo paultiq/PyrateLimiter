@@ -13,6 +13,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import wait
 from functools import partial
+from typing import Optional
 
 from pyrate_limiter import Duration
 from pyrate_limiter import Limiter
@@ -20,7 +21,7 @@ from pyrate_limiter import MonotonicClock
 from pyrate_limiter import MultiprocessBucket
 from pyrate_limiter import Rate
 
-LIMITER: Limiter | None = None
+LIMITER: Optional[Limiter] = None
 MAX_DELAY = Duration.DAY
 REQUESTS_PER_SECOND = 100
 NUM_REQUESTS = REQUESTS_PER_SECOND * 5  # Run for ~5 seconds
