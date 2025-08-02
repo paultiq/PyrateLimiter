@@ -13,12 +13,13 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import wait
 from functools import partial
+from typing import Optional
 
 from pyrate_limiter import Duration
 from pyrate_limiter import Limiter
 from pyrate_limiter import limiter_factory
 
-LIMITER: Limiter | None = None
+LIMITER: Optional[Limiter] = None
 REQUESTS_PER_SECOND = 10
 NUM_REQUESTS = REQUESTS_PER_SECOND * 5  # Run for ~5 seconds
 
