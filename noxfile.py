@@ -18,6 +18,10 @@ COVERAGE_ARGS = ["--cov=pyrate_limiter", "--cov-append", "--cov-report=term", "-
                  ]
 
 
+def get_examples():
+    return [f for f in glob("examples/*.py") if f != "examples/httpx_ratelimiter.py"]
+
+
 @session(python=False)
 def lint(session) -> None:
     session.run("pre-commit", "run", "--all-files")
@@ -34,14 +38,14 @@ def cover(session) -> None:
     session.run("pytest", *PYTEST_MP2_ARGS)
 
     # Everything else - concurrent
-    session.run("pytest", *PYTEST_ARGS, *COVERAGE_ARGS, "tests", *glob("examples/*.py"))
+    session.run("pytest", *PYTEST_ARGS, *COVERAGE_ARGS, "tests", *get_examples())
 
 
 @session(python=False)
 def test(session) -> None:
     session.run("pytest", *PYTEST_MP_ARGS)
     session.run("pytest", *PYTEST_MP2_ARGS)
-    session.run("pytest", *PYTEST_ARGS, "tests", *glob("examples/*.py"))
+    session.run("pytest", *PYTEST_ARGS, "tests", *get_examples())
 
 
 @session(python=False)
