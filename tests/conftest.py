@@ -108,7 +108,7 @@ async def create_sqlite_bucket(
         table_name=table_name,
         use_file_lock=file_lock,
     )
-    request.addfinalizer(bucket.conn.close())
+    request.addfinalizer(bucket.conn.close)
 
     return bucket
 
