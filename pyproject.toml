@@ -54,7 +54,7 @@ dev = [
     "flake8_polyfill>=1.0.2,<2",
     "nox~=2025.5",
     "nox-poetry>=1.0",
-    "pre-commit>=4.2.0",
+    "pre-commit-uv",
     "psycopg[pool]>=3.2.9",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",

@@ -1,5 +1,4 @@
 """Pytest config & fixtures"""
-import asyncio
 from functools import partial
 from logging import basicConfig
 from logging import getLogger
@@ -81,8 +80,9 @@ async def create_async_redis_bucket(*, request: pytest.FixtureRequest, rates: Li
     bucket = await RedisBucket.init(rates, redis_db, bucket_key)
     assert await bucket.count() == 0
 
-    request.addfinalizer(lambda: asyncio.run(redis_db.aclose()))  # type: ignore[attr-defined]
-    request.addfinalizer(lambda: asyncio.run(pool.disconnect()))
+    # disabled for now: will need to rethink how to cleanup pools in test cases
+    # request.addfinalizer(lambda: asyncio.run(redis_db.aclose()))  # type: ignore[attr-defined]
+    # request.addfinalizer(lambda: asyncio.run(pool.disconnect()))
 
     return bucket
 
