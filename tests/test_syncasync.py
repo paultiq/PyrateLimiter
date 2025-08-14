@@ -1,6 +1,9 @@
-from pyrate_limiter import limiter_factory, Limiter
 import asyncio
+
 import pytest
+
+from pyrate_limiter import Limiter
+from pyrate_limiter import limiter_factory
 
 
 def run_sync_task(limiter: Limiter, num: int, results: list[int]):
@@ -26,7 +29,7 @@ def run_async_task(limiter: Limiter, num: int, results: list[int]):
 def test_sync_async():
     limiter = limiter_factory.create_inmemory_limiter(rate_per_duration=10)
 
-    results: list[int] = []
+    results = []
     run_sync_task(limiter, 1, results)
     run_async_task(limiter, 1, results)
     run_sync_task(limiter, 1, results)
@@ -38,7 +41,7 @@ def test_sync_async():
 def test_async_sync():
     limiter = limiter_factory.create_inmemory_limiter(rate_per_duration=10)
 
-    results: list[int] = []
+    results = []
     run_async_task(limiter, 1, results)
     run_sync_task(limiter, 1, results)
     run_async_task(limiter, 1, results)
@@ -73,7 +76,7 @@ def test_async_wrapper_outside_async():
 def test_async_sync_async_bucket():
     limiter = limiter_factory.create_inmemory_limiter(rate_per_duration=10)
 
-    results: list[int] = []
+    results = []
     run_async_task(limiter, 1, results)
     run_async_task(limiter, 1, results)
     run_async_task(limiter, 1, results)
