@@ -30,7 +30,7 @@ async def get_now(clock: AbstractClock) -> int:
 @pytest.mark.asyncio
 async def test_bucket_01(clock: ClockSet, create_bucket):
     rates = [Rate(20, 1000)]
-    bucket = BucketAsyncWrapper(await create_bucket(rates))
+    bucket = BucketAsyncWrapper(await create_bucket(rates=rates))
     assert bucket is not None
 
     peek = await bucket.peek(0)
@@ -60,7 +60,7 @@ async def test_bucket_01(clock: ClockSet, create_bucket):
 @pytest.mark.asyncio
 async def test_bucket_02(clock: ClockSet, create_bucket):
     rates = [Rate(30, 1000), Rate(50, 2000)]
-    bucket = BucketAsyncWrapper(await create_bucket(rates))
+    bucket = BucketAsyncWrapper(await create_bucket(rates=rates))
     start = time()
 
     while await bucket.count() < 150:
@@ -90,7 +90,7 @@ async def test_bucket_02(clock: ClockSet, create_bucket):
 @pytest.mark.asyncio
 async def test_bucket_03(clock: ClockSet, create_bucket):
     rates = [Rate(30, 1000), Rate(50, 2000)]
-    bucket = BucketAsyncWrapper(await create_bucket(rates))
+    bucket = BucketAsyncWrapper(await create_bucket(rates=rates))
 
     peek = await bucket.peek(0)
     assert peek is None
@@ -129,7 +129,7 @@ async def test_bucket_03(clock: ClockSet, create_bucket):
 @pytest.mark.asyncio
 async def test_bucket_waiting(clock: ClockSet, create_bucket):
     rates = [Rate(3, 500)]
-    bucket = await create_bucket(rates)
+    bucket = await create_bucket(rates=rates)
 
     logger.info("Testing `bucket.waiting` with Bucket: %s, \nclock=%s", bucket, clock)
 
@@ -196,7 +196,7 @@ async def test_bucket_waiting(clock: ClockSet, create_bucket):
 @pytest.mark.asyncio
 async def test_bucket_leak(clock: ClockSet, create_bucket):
     rates = [Rate(100, 3000)]
-    bucket = BucketAsyncWrapper(await create_bucket(rates))
+    bucket = BucketAsyncWrapper(await create_bucket(rates=rates))
 
     while await bucket.count() < 200:
         await bucket.put(RateItem("item", await get_now(clock)))
@@ -216,7 +216,7 @@ async def test_bucket_leak(clock: ClockSet, create_bucket):
 async def test_bucket_flush(create_bucket):
     """Testing bucket's flush, only need 1 single clock type"""
     rates = [Rate(50, 1000)]
-    bucket = BucketAsyncWrapper(await create_bucket(rates))
+    bucket = BucketAsyncWrapper(await create_bucket(rates=rates))
     assert isinstance(bucket.rates[0], Rate)
     clock = TimeClock()
 
@@ -238,7 +238,7 @@ async def test_bucket_performance(create_bucket):
     """
     clock = TimeClock()
     rates = [Rate(30000, 50000)]
-    bucket = BucketAsyncWrapper(await create_bucket(rates))
+    bucket = BucketAsyncWrapper(await create_bucket(rates=rates))
     before = time()
 
     for _ in range(10_000):
