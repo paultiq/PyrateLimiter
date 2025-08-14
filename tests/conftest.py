@@ -110,6 +110,8 @@ async def create_sqlite_bucket(
     )
     request.addfinalizer(bucket.conn.close())
 
+    return bucket
+
 
 async def create_filelocksqlite_bucket(
     *, request: pytest.FixtureRequest, rates: List[Rate]
