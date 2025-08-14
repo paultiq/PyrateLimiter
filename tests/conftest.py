@@ -108,8 +108,6 @@ async def create_sqlite_bucket(
 
     return bucket
 
-    return bucket
-
 
 async def create_filelocksqlite_bucket(
     *, rates: List[Rate]
