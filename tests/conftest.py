@@ -139,7 +139,7 @@ async def create_postgres_bucket(*, rates: List[Rate]):
 )
 def create_bucket(request: pytest.FixtureRequest):
     """Parametrization for different bucket."""
-    return request.param
+    return partial(request.param, request=request)
 
 
 @pytest.fixture(params=[True, False])
