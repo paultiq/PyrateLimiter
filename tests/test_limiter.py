@@ -269,6 +269,7 @@ async def test_limiter_concurrency(
     limiter_delay,
 ):
     bucket = await create_bucket(rates=DEFAULT_RATES)
+
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
         factory,
