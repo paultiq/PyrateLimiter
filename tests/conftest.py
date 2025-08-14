@@ -81,7 +81,7 @@ async def create_async_redis_bucket(*, request: pytest.FixtureRequest, rates: Li
     bucket = await RedisBucket.init(rates, redis_db, bucket_key)
     assert await bucket.count() == 0
 
-    request.addfinalizer(redis_db.close())
+    request.addfinalizer(lambda: asyncio.run(redis_db.aclose()))  # type: ignore[attr-defined]
     request.addfinalizer(lambda: asyncio.run(pool.disconnect()))
 
     return bucket
