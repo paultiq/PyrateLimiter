@@ -1,4 +1,6 @@
 """Pytest config & fixtures"""
+import asyncio
+from functools import partial
 from logging import basicConfig
 from logging import getLogger
 from os import getenv
@@ -49,11 +51,11 @@ def clock(request):
     return request.param
 
 
-async def create_in_memory_bucket(rates: List[Rate]):
+async def create_in_memory_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
     return InMemoryBucket(rates)
 
 
-async def create_redis_bucket(rates: List[Rate]):
+async def create_redis_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
     from redis import ConnectionPool
     from redis import Redis
 
@@ -66,7 +68,7 @@ async def create_redis_bucket(rates: List[Rate]):
     return bucket
 
 
-async def create_async_redis_bucket(rates: List[Rate]):
+async def create_async_redis_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
     from redis.asyncio import ConnectionPool as AsyncConnectionPool
     from redis.asyncio import Redis as AsyncRedis
 
@@ -78,40 +80,52 @@ async def create_async_redis_bucket(rates: List[Rate]):
     await redis_db.delete(bucket_key)
     bucket = await RedisBucket.init(rates, redis_db, bucket_key)
     assert await bucket.count() == 0
-    return bucket
 
-
-async def create_mp_bucket(rates: List[Rate]):
-    bucket = MultiprocessBucket.init(rates)
+    request.addfinalizer(redis_db.close())
+    request.addfinalizer(lambda: asyncio.run(pool.disconnect()))
 
     return bucket
 
 
-async def create_sqlite_bucket(rates: List[Rate], file_lock: bool = False):
+async def create_mp_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
+    bucket = MultiprocessBucket.init(rates=rates)
 
+    return bucket
+
+
+async def create_sqlite_bucket(
+    request: pytest.FixtureRequest, rates: List[Rate], file_lock: bool = False
+):
     temp_dir = Path(gettempdir())
     default_db_path = temp_dir / f"pyrate_limiter_{id_generator(size=5)}.sqlite"
     table_name = f"pyrate-test-bucket-{id_generator(size=10)}"
 
     logger.info("SQLite db path: %s", default_db_path)
 
-    return limiter_factory.create_sqlite_bucket(rates=rates,
-                                                db_path=str(default_db_path),
-                                                table_name=table_name,
-                                                use_file_lock=file_lock)
+    bucket = limiter_factory.create_sqlite_bucket(
+        rates=rates,
+        db_path=str(default_db_path),
+        table_name=table_name,
+        use_file_lock=file_lock,
+    )
+    request.addfinalizer(bucket.conn.close())
 
 
-async def create_filelocksqlite_bucket(rates: List[Rate]):
-    return await create_sqlite_bucket(rates=rates, file_lock=True)
+async def create_filelocksqlite_bucket(
+    request: pytest.FixtureRequest, rates: List[Rate]
+):
+    return await create_sqlite_bucket(request=request, rates=rates, file_lock=True)
 
 
-async def create_postgres_bucket(rates: List[Rate]):
+async def create_postgres_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
     from psycopg_pool import ConnectionPool as PgConnectionPool
 
     pool = PgConnectionPool("postgresql://postgres:postgres@localhost:5432", open=True)
     table = f"test_bucket_{id_generator()}"
     bucket = PostgresBucket(pool, table, rates)
     assert bucket.count() == 0
+
+    request.addfinalizer(lambda: (pool.close(), pool.wait_close()))
     return bucket
 
 
@@ -123,12 +137,12 @@ async def create_postgres_bucket(rates: List[Rate]):
         create_async_redis_bucket,
         create_postgres_bucket,
         create_filelocksqlite_bucket,
-        pytest.param(create_mp_bucket, marks=pytest.mark.mpbucket)
+        pytest.param(create_mp_bucket, marks=pytest.mark.mpbucket),
     ]
 )
-def create_bucket(request):
+def create_bucket(request: pytest.FixtureRequest):
     """Parametrization for different bucket."""
-    return request.param
+    return partial(request.param, request=request)
 
 
 @pytest.fixture(params=[True, False])
