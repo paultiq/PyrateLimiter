@@ -124,7 +124,7 @@ async def create_postgres_bucket(*, request: pytest.FixtureRequest, rates: List[
     bucket = PostgresBucket(pool, table, rates)
     assert bucket.count() == 0
 
-    request.addfinalizer(lambda: (pool.close(), pool.wait_close()))
+    request.addfinalizer(pool.close)
     return bucket
 
 
