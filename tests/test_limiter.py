@@ -51,7 +51,7 @@ async def test_limiter_constructor_02(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
 
     limiter = Limiter(bucket)
     assert isinstance(limiter.bucket_factory, SingleBucketFactory)
@@ -99,7 +99,7 @@ async def test_limiter_01(
     if request.node.get_closest_marker("mpbucket"):
         pytest.skip("Skipped mpbucket test due to erratic performance timing compared to more deterministic buckets")
 
-    bucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
 
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
@@ -266,7 +266,7 @@ async def test_limiter_concurrency(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket: AbstractBucket = await create_bucket(DEFAULT_RATES)
+    bucket: AbstractBucket = await create_bucket(rates=DEFAULT_RATES)
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
         factory,
@@ -314,7 +314,7 @@ async def test_limiter_decorator(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
         factory,
