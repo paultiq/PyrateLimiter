@@ -48,11 +48,11 @@ def clock(request):
     return request.param
 
 
-async def create_in_memory_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
+async def create_in_memory_bucket(*, request: pytest.FixtureRequest, rates: List[Rate]):
     return InMemoryBucket(rates)
 
 
-async def create_redis_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
+async def create_redis_bucket(*, request: pytest.FixtureRequest, rates: List[Rate]):
     from redis import ConnectionPool
     from redis import Redis
 
@@ -65,7 +65,7 @@ async def create_redis_bucket(request: pytest.FixtureRequest, rates: List[Rate])
     return bucket
 
 
-async def create_async_redis_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
+async def create_async_redis_bucket(*, request: pytest.FixtureRequest, rates: List[Rate]):
     from redis.asyncio import ConnectionPool as AsyncConnectionPool
     from redis.asyncio import Redis as AsyncRedis
 
@@ -84,14 +84,14 @@ async def create_async_redis_bucket(request: pytest.FixtureRequest, rates: List[
     return bucket
 
 
-async def create_mp_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
+async def create_mp_bucket(*, request: pytest.FixtureRequest, rates: List[Rate]):
     bucket = MultiprocessBucket.init(rates=rates)
 
     return bucket
 
 
 async def create_sqlite_bucket(
-    request: pytest.FixtureRequest, rates: List[Rate], file_lock: bool = False
+    *, request: pytest.FixtureRequest, rates: List[Rate], file_lock: bool = False
 ):
     temp_dir = Path(gettempdir())
     default_db_path = temp_dir / f"pyrate_limiter_{id_generator(size=5)}.sqlite"
@@ -109,12 +109,12 @@ async def create_sqlite_bucket(
 
 
 async def create_filelocksqlite_bucket(
-    request: pytest.FixtureRequest, rates: List[Rate]
+    *, request: pytest.FixtureRequest, rates: List[Rate]
 ):
     return await create_sqlite_bucket(request=request, rates=rates, file_lock=True)
 
 
-async def create_postgres_bucket(request: pytest.FixtureRequest, rates: List[Rate]):
+async def create_postgres_bucket(*, request: pytest.FixtureRequest, rates: List[Rate]):
     from psycopg_pool import ConnectionPool as PgConnectionPool
 
     pool = PgConnectionPool("postgresql://postgres:postgres@localhost:5432", open=True)
@@ -137,7 +137,7 @@ async def create_postgres_bucket(request: pytest.FixtureRequest, rates: List[Rat
         pytest.param(create_mp_bucket, marks=pytest.mark.mpbucket),
     ]
 )
-def create_bucket(request: pytest.FixtureRequest):
+def create_bucket(*, request: pytest.FixtureRequest):
     """Parametrization for different bucket."""
     return partial(request.param, request=request)
 
