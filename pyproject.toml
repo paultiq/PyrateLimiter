@@ -3,7 +3,7 @@ name = "pyrate-limiter"
 dynamic = ["version"]
 description = "Python Rate-Limiter using Leaky-Bucket Algorithm"
 authors = [{ name = "vutr", email = "me@vutr.io" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
 keywords = [
@@ -21,12 +21,11 @@ classifiers = [
     "Topic :: Software Development :: Documentation",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    # "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.14",
 ]
 
 
@@ -54,7 +53,7 @@ dev = [
     "flake8_polyfill>=1.0.2,<2",
     "nox~=2025.5",
     "nox-poetry>=1.0",
-    "pre-commit>=4.2.0",
+    "pre-commit-uv",
     "psycopg[pool]>=3.2.9",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
@@ -102,7 +101,30 @@ include = ["pyrate_limiter"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-retries = 2
-retry_delay = 4
+retries = 0
+retry_delay = 1
 cumulative_timing = false
 retry_outcome = "rerun"
+
+[tool.ruff]
+line-length = 150
+exclude = [
+  ".git",
+  "__pycache__",
+  "build",
+  "dist",
+  "docs/source/conf.py",
+  "tests",
+]
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "S", "B", "G", "N", "I001", "T", "PD", "C90"]
+ignore = [
+  "E501",
+  "C901",
+  "S101"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

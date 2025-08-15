@@ -15,6 +15,7 @@ from pyrate_limiter import id_generator
 from pyrate_limiter import InMemoryBucket
 from pyrate_limiter import RateItem
 from pyrate_limiter import RedisBucket
+from pyrate_limiter import AsyncRedisBucket
 
 
 class DemoBucketFactory(BucketFactory):
@@ -100,7 +101,7 @@ class DemoAsyncGetBucketFactory(BucketFactory):
         redis_db: AsyncRedis = AsyncRedis(connection_pool=pool)
         key = f"test-bucket/{id_generator()}"
         await redis_db.delete(key)
-        bucket = await RedisBucket.init(DEFAULT_RATES, redis_db, key)
+        bucket = await AsyncRedisBucket.init(DEFAULT_RATES, redis_db, key)
         self.schedule_leak(bucket, self.clock)
         self.buckets.update({item.name: bucket})
         return bucket

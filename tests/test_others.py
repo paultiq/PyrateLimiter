@@ -140,14 +140,14 @@ async def test_clock(clock):
 
 
 @pytest.mark.asyncio
-async def test_sqlite_clock():
+async def test_sqlite_clock(request: pytest.FixtureRequest):
     """Testing clock backends
     """
     await test_clock(SQLiteClock.default())
 
     from .conftest import create_sqlite_bucket
 
-    bucket = await create_sqlite_bucket([Rate(1, Duration.SECOND)])
+    bucket = await create_sqlite_bucket(rates=[Rate(1, Duration.SECOND)])
     await test_clock(SQLiteClock(bucket.conn))
 
     await test_clock(SQLiteClock(bucket))
