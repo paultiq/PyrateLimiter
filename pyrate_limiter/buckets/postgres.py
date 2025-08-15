@@ -79,7 +79,7 @@ class PostgresBucket(AbstractBucket):
         with self._get_conn() as conn:
             for rate in self.rates:
                 bound = f"SELECT TO_TIMESTAMP({item.timestamp / 1000}) - INTERVAL '{rate.interval} milliseconds'"
-                query = f"SELECT COUNT(*) FROM {self._full_tbl} WHERE item_timestamp >= ({bound})"  # noqa: S608  # FIXME: SQL Parameterization and table name sanitization
+                query = f"SELECT COUNT(*) FROM {self._full_tbl} WHERE item_timestamp >= ({bound})"  # noqa: S608  # FIXME - use parameters and sanitize table name
                 cur = conn.execute(query)
                 count = int(cur.fetchone()[0])
                 cur.close()

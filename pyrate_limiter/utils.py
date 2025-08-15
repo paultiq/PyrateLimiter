@@ -67,7 +67,7 @@ def id_generator(
     size=6,
     chars=string.ascii_uppercase + string.digits + string.ascii_lowercase,
 ) -> str:
-    return "".join(random.choice(chars) for _ in range(size))  # noqa: S311
+    return "".join(random.choices(chars, k=size))  # noqa: S311
 
 
 def dedicated_sqlite_clock_connection():

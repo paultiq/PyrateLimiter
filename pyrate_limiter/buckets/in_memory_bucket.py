@@ -87,3 +87,6 @@ class InMemoryBucket(AbstractBucket):
             return None
 
         return self.items[-1 - index] if abs(index) < self.count() else None
+
+    def close(self):
+        pass

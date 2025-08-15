@@ -58,11 +58,11 @@ def test_sqlite_filelock_multiprocess():
             t = f.result()
             times.append(t)
         except Exception as e:
-            print(f"Task raised: {e}")
+            logger.info("Task raised: %s", e)
 
     end = time.monotonic()
 
-    print(f"Completed {NUM_REQUESTS=} in {end - start} seconds, at a rate of {REQUESTS_PER_SECOND=}")
+    logger.info("Completed %d in %d seconds, at a rate of %d/sec", NUM_REQUESTS, end - start, REQUESTS_PER_SECOND)
 
 
 if __name__ == "__main__":

@@ -147,7 +147,7 @@ async def test_sqlite_clock(request: pytest.FixtureRequest):
 
     from .conftest import create_sqlite_bucket
 
-    bucket = await create_sqlite_bucket(request=request, rates=[Rate(1, Duration.SECOND)])
+    bucket = await create_sqlite_bucket(rates=[Rate(1, Duration.SECOND)])
     await test_clock(SQLiteClock(bucket.conn))
 
     await test_clock(SQLiteClock(bucket))
