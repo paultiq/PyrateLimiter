@@ -106,3 +106,26 @@ retries = 2
 retry_delay = 4
 cumulative_timing = false
 retry_outcome = "rerun"
+
+[tool.ruff]
+line-length = 150
+exclude = [
+  ".git",
+  "__pycache__",
+  "build",
+  "dist",
+  "docs/source/conf.py",
+  "tests",
+]
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "S", "B", "G", "N", "I001", "T", "PD", "C90"]
+ignore = [
+  "E501",
+  "C901",
+  "S101"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
