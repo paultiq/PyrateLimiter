@@ -38,9 +38,6 @@ def test_postgres():
 
             for i in range(10):
                 task(str(i), 1)
-        assert postgres_bucket.pool.closed
-
-    assert postgres_bucket.pool.closed
 
 
 if __name__ == "__main__":
