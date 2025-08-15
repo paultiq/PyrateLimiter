@@ -65,7 +65,6 @@ def create_sqlite_limiter(
         max_delay: Maximum delay before failing requests.
         buffer_ms: Extra wait time in milliseconds to account for clock drift.
         use_file_lock: Enable file locking for multi-process synchronization.
-        async_wrapper: Whether to wrap the bucket for async usage.
 
     Returns:
         Limiter: Configured SQLite-backed limiter instance.
@@ -100,7 +99,6 @@ def create_inmemory_limiter(
         duration: Time window for the rate limit.
         max_delay: Maximum delay before failing requests.
         buffer_ms: Extra wait time in milliseconds to account for clock drift.
-        async_wrapper: Whether to wrap the bucket for async usage.
 
     Returns:
         Limiter: Configured in-memory limiter instance.

@@ -2,8 +2,9 @@ import asyncio
 
 import pytest
 
-from pyrate_limiter import Limiter
+from pyrate_limiter import Limiter, BucketAsyncWrapper, Rate, Duration, InMemoryBucket
 from pyrate_limiter import limiter_factory
+
 
 
 def run_sync_task(limiter: Limiter, num: int, results: list[int]):
@@ -53,7 +54,7 @@ def test_async_sync():
 
 def test_sync_async_async_bucket():
     limiter = limiter_factory.create_inmemory_limiter(
-        rate_per_duration=10, async_wrapper=False
+        rate_per_duration=10
     )
     results: list[int] = []
 
@@ -67,10 +68,12 @@ def test_sync_async_async_bucket():
 
 
 def test_async_wrapper_outside_async():
+    rate = Rate(10, Duration.DAY)
+    rate_limits = [rate]
+    bucket = BucketAsyncWrapper(InMemoryBucket(rate_limits))
+
     with pytest.raises(RuntimeError):
-        limiter_factory.create_inmemory_limiter(
-            rate_per_duration=10, async_wrapper=True
-        )
+        Limiter(bucket, raise_when_fail=False, max_delay=10, retry_until_max_delay=True, buffer_ms=5)
 
 
 def test_async_sync_async_bucket():
