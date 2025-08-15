@@ -8,12 +8,14 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from inspect import isawaitable, iscoroutine
 from threading import Thread
-from typing import Awaitable, Dict, List, Optional, Type, Union
+from typing import Any, Awaitable, Dict, List, Type, Union
+
+from typing_extensions import Self
 
 from .clock import AbstractClock
 from .rate import Rate, RateItem
 
-logger = logging.getLogger("pyrate_limiter")
+logger = logging.getLogger(__name__)
 
 
 class AbstractBucket(ABC):
@@ -23,7 +25,7 @@ class AbstractBucket(ABC):
     """
 
     rates: List[Rate]
-    failing_rate: Optional[Rate] = None
+    failing_rate: Rate | None = None
 
     @abstractmethod
     def put(self, item: RateItem) -> Union[bool, Awaitable[bool]]:
@@ -34,28 +36,28 @@ class AbstractBucket(ABC):
     @abstractmethod
     def leak(
         self,
-        current_timestamp: Optional[int] = None,
+        current_timestamp: int | None = None,
     ) -> Union[int, Awaitable[int]]:
         """leaking bucket - removing items that are outdated"""
 
     @abstractmethod
-    def flush(self) -> Union[None, Awaitable[None]]:
+    def flush(self) -> None | Awaitable[None]:
         """Flush the whole bucket
         - Must remove `failing-rate` after flushing
         """
 
     @abstractmethod
-    def count(self) -> Union[int, Awaitable[int]]:
+    def count(self) -> int | Awaitable[int]:
         """Count number of items in the bucket"""
 
     @abstractmethod
-    def peek(self, index: int) -> Union[Optional[RateItem], Awaitable[Optional[RateItem]]]:
+    def peek(self, index: int) -> None | RateItem | Awaitable[RateItem | None]:
         """Peek at the rate-item at a specific index in latest-to-earliest order
         NOTE: The reason we cannot peek from the start of the queue(earliest-to-latest) is
         we can't really tell how many outdated items are still in the queue
         """
 
-    def waiting(self, item: RateItem) -> Union[int, Awaitable[int]]:
+    def waiting(self, item: RateItem) -> int | Awaitable[int]:
         """Calculate time until bucket become availabe to consume an item again"""
         if self.failing_rate is None:
             return 0
@@ -77,9 +79,7 @@ class AbstractBucket(ABC):
             upper_time_bound = inner_bound_item.timestamp
             return upper_time_bound - lower_time_bound
 
-        async def _calc_waiting_async() -> int:
-            nonlocal bound_item
-
+        async def _calc_waiting_async(bound_item) -> int:
             while isawaitable(bound_item):
                 bound_item = await bound_item
 
@@ -91,25 +91,33 @@ class AbstractBucket(ABC):
             return _calc_waiting(bound_item)
 
         if isawaitable(bound_item):
-            return _calc_waiting_async()
+            return _calc_waiting_async(bound_item)
 
         assert isinstance(bound_item, RateItem)
         return _calc_waiting(bound_item)
 
-    def limiter_lock(self) -> Optional[object]:  # type: ignore
+    def limiter_lock(self) -> Any | None:  # type: ignore
         """An additional lock to be used by Limiter in-front of the thread lock.
         Intended for multiprocessing environments where a thread lock is insufficient.
         """
         return None
 
-    def close(self) -> None:  # noqa: B027
-        pass
+    @abstractmethod
+    def close(self) -> None: ...
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
         self.close()
+
+
+class AsyncAbstractBucket(AbstractBucket):
+    async def __aenter__(self) -> Self:
+        return self.__enter__()
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        return self.__exit__(exc_type, exc, tb)
 
 
 class Leaker(Thread):
@@ -123,7 +131,7 @@ class Leaker(Thread):
     async_buckets: Dict[int, AbstractBucket]
     clocks: Dict[int, AbstractClock]
     leak_interval: int = 10_000
-    aio_leak_task: Optional[asyncio.Task] = None
+    aio_leak_task: asyncio.Task | None = None
 
     def __init__(self, leak_interval: int):
         self.sync_buckets = defaultdict()
@@ -221,12 +229,12 @@ class Leaker(Thread):
 
 
 class BucketFactory(ABC):
-    """Asbtract BucketFactory class.
+    """Abstract BucketFactory class.
     It is reserved for user to implement/override this class with
     his own bucket-routing/creating logic
     """
 
-    _leaker: Optional[Leaker] = None
+    _leaker: Leaker | None = None
     _leak_interval: int = 10_000
 
     @property
@@ -248,7 +256,7 @@ class BucketFactory(ABC):
         self,
         name: str,
         weight: int = 1,
-    ) -> Union[RateItem, Awaitable[RateItem]]:
+    ) -> RateItem | Awaitable[RateItem]:
         """Add the current timestamp to the receiving item using any clock backend
         - Turn it into a RateItem
         - Can return either a coroutine or a RateItem instance
@@ -311,12 +319,11 @@ class BucketFactory(ABC):
         return self._leaker.deregister(bucket)
 
     def __del__(self):
-        # Make sure all leakers are deregistered
-        for bucket in self.get_buckets():
-            try:
-                self.dispose(bucket)
-            except Exception as e:
-                logger.debug("Exception %s (%s) deleting bucket %r", type(e).__name__, e, bucket)
+        try:
+            # Make sure cleaner is cleaned up
+            self.close()
+        except Exception:
+            logger.exception("Exception %s (%s) closing")
 
     def close(self) -> None:
         try:

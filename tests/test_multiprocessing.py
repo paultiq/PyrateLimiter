@@ -11,6 +11,7 @@ from typing import List
 from typing import Optional
 
 import pytest
+from .conftest import ClockSet, wrap_if_not_async
 
 from pyrate_limiter import AbstractBucket
 from pyrate_limiter import BucketAsyncWrapper
@@ -99,7 +100,7 @@ def my_task_async(num_requests):
 
     async def run_many_async_tasks():
         assert BUCKET is not None
-        bucket = BucketAsyncWrapper(BUCKET)
+        bucket = wrap_if_not_async(BUCKET)
         limiter = Limiter(
             bucket,
             raise_when_fail=False,

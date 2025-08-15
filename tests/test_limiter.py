@@ -4,6 +4,7 @@ import time
 from inspect import isawaitable
 
 import pytest
+from .conftest import ClockSet, wrap_if_not_async
 
 from .conftest import DEFAULT_RATES
 from .conftest import logger
@@ -108,7 +109,7 @@ async def test_limiter_01(
         max_delay=limiter_delay,
         buffer_ms=10
     )
-    bucket = BucketAsyncWrapper(bucket)
+    bucket = wrap_if_not_async(bucket)
 
     item = "demo"
 
@@ -267,7 +268,7 @@ async def test_limiter_concurrency(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket: AbstractBucket = await create_bucket(rates=DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
         factory,
