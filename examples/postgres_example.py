@@ -17,6 +17,8 @@ from pyrate_limiter import Duration, Limiter, PostgresBucket, Rate
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+
 
 def create_postgres_bucket(rates: List[Rate]):
     pool = PgConnectionPool("postgresql://postgres:postgres@localhost:5432")

@@ -1,5 +1,6 @@
 # ruff: noqa: T201
 import asyncio
+import logging
 import time
 from datetime import datetime
 from typing import List
@@ -8,6 +9,8 @@ import pytest
 import redis
 
 from pyrate_limiter import AsyncRedisBucket, Duration, Limiter, Rate, RedisBucket
+
+logger = logging.getLogger(__name__)
 
 
 async def ticker():
