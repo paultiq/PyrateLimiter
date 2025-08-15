@@ -10,6 +10,8 @@ import redis
 
 from pyrate_limiter import AsyncRedisBucket, Duration, Limiter, Rate, RedisBucket
 
+logger = logging.getLogger(__name__)
+
 
 async def ticker():
     for _ in range(8):

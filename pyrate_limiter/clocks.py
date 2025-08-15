@@ -26,8 +26,6 @@ class MonotonicClock(AbstractClock):
 
 
 class MonotonicAsyncClock(AbstractClock):
-    """Monotonic Async Clock, meant for testing only"""
-
     async def now(self) -> int:
         return int(1000 * monotonic())
 
