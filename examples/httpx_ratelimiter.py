@@ -99,7 +99,7 @@ def asyncio_example():
         await client.get(url)
 
     async def example():
-        limiter = limiter_factory.create_inmemory_limiter(rate_per_duration=1, duration=Duration.SECOND, max_delay=Duration.HOUR, async_wrapper=True)
+        limiter = limiter_factory.create_inmemory_limiter(rate_per_duration=1, duration=Duration.SECOND, max_delay=Duration.HOUR)
         transport = AsyncRateLimiterTransport(limiter=limiter)
         client = httpx.AsyncClient(transport=transport)
 
