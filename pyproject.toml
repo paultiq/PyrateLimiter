@@ -54,7 +54,7 @@ dev = [
     "nox~=2025.5",
     "nox-poetry>=1.0",
     "pre-commit-uv",
-    "psycopg[pool]>=3.2.9",
+    "psycopg[pool,binary]>=3.2.9",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
     "pytest-cov>=6.2.1",

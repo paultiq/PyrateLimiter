@@ -230,3 +230,11 @@ class SQLiteBucket(AbstractBucket):
             sqlite_connection.commit()
 
             return cls(rates, sqlite_connection, table=table, lock=file_lock)
+
+    def close(self):
+        if self.conn is not None:
+            try:
+                self.conn.close()
+                self.conn = None
+            except Exception as e:
+                logger.debug("Exception %s closing sql connection", e)
