@@ -1,11 +1,8 @@
-"""Naive bucket implementation using built-in list
-"""
-from typing import List
-from typing import Optional
+"""Naive bucket implementation using built-in list"""
 
-from ..abstracts import AbstractBucket
-from ..abstracts import Rate
-from ..abstracts import RateItem
+from typing import List, Optional
+
+from ..abstracts import AbstractBucket, Rate, RateItem
 from ..utils import binary_search
 
 
@@ -90,3 +87,6 @@ class InMemoryBucket(AbstractBucket):
             return None
 
         return self.items[-1 - index] if abs(index) < self.count() else None
+
+    def close(self):
+        pass
