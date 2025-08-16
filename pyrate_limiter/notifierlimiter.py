@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from functools import wraps
 from inspect import isawaitable
 from threading import Condition, RLock, local
@@ -167,8 +168,12 @@ class NotifierLimiter:
 
         d = bucket.waiting(item)
 
-        assert not isawaitable(d)
-        assert isinstance(d, int) and d >= 0
+        if isawaitable(d):
+            raise RuntimeError("sync path should never return awaitable")
+
+        d = int(d)
+        if d < 0:
+            d = 0
 
         return (d + self.buffer_ms) / 1000.0
 
@@ -184,7 +189,10 @@ class NotifierLimiter:
         d = bucket.waiting(item)
         if isawaitable(d):
             d = await d
-        assert isinstance(d, int) and d >= 0
+
+        d = int(d)
+        if d < 0:
+            d = 0
 
         return (d + self.buffer_ms) / 1000.0
 
@@ -210,13 +218,14 @@ class NotifierLimiter:
                 else None
             )  # best-effort if called inside loop
             # Use threading.Condition with timeout based on bucket.waiting()
+            deadline = None if timeout == -1 else time.monotonic() + timeout
             while True:
                 wait_s = self._next_delay_seconds(name, weight)
                 if deadline is not None:
-                    remaining = deadline - asyncio.get_running_loop().time()
-                    if remaining <= 0:
+                    rem = deadline - time.monotonic()
+                    if rem <= 0:
                         return False
-                    wait_s = min(wait_s, max(0.0, remaining))
+                    wait_s = min(wait_s, rem)
                 with self._cond:
                     self._cond.wait(timeout=wait_s)
                 if self._put_now(name, weight):
@@ -242,14 +251,17 @@ class NotifierLimiter:
             while True:
                 wait_s = await self._next_delay_seconds_async(name, weight)
                 ev.clear()
+                t0 = asyncio.get_event_loop().time()
                 try:
                     if timeout == -1:
                         await asyncio.wait_for(ev.wait(), timeout=wait_s)
                     else:
                         await asyncio.wait_for(ev.wait(), timeout=min(wait_s, timeout))
-                        timeout = max(0.0, timeout - wait_s)
                 except asyncio.TimeoutError:
                     pass
+                dt = asyncio.get_event_loop().time() - t0
+                if timeout != -1:
+                    timeout = max(0.0, timeout - dt)
                 if await self._put_now_async(name, weight):
                     return True
                 if timeout == 0:

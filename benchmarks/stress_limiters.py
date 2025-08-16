@@ -6,7 +6,7 @@ from functools import partial
 from time import perf_counter
 from typing import Callable, Literal, cast
 
-from pyrate_limiter import Duration, Limiter, MultiprocessBucket, Rate, limiter_factory
+from pyrate_limiter import Duration, Limiter, MultiprocessBucket, NotifierLimiter, Rate, limiter_factory
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,12 @@ class TestResult:
 
 def create_mp_limiter(bucket: MultiprocessBucket):
     limiter = Limiter(bucket, buffer_ms=BUFFER_MS)
+
+    return limiter
+
+
+def create_mp_limiter2(bucket: MultiprocessBucket):
+    limiter = NotifierLimiter(bucket, buffer_ms=BUFFER_MS)
 
     return limiter
 
@@ -58,6 +64,9 @@ def create_rate_limiter_factory(
     elif backend == "mp_limiter":
         bucket = MultiprocessBucket.init([rate])
         return partial(create_mp_limiter, bucket=bucket)
+    elif backend == "mp_limiter2":
+        bucket = MultiprocessBucket.init([rate])
+        return partial(create_mp_limiter2, bucket=bucket)
     else:
         raise ValueError(f"Unexpected backend option: {backend}")
 
@@ -157,7 +166,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    for backend in ["default", "sqlite", "mp_limiter"]:
+    for backend in ["default", "sqlite", "mp_limiter", "mp_limiter2"]:
         backend = cast(Literal["default", "sqlite", "sqlite_filelock", "mp_limiter"], backend)
         for requests_per_second in requests_per_second_list:
             logger.info(f"Testing with {backend=}, {requests_per_second=}")
@@ -172,7 +181,7 @@ if __name__ == "__main__":
             test_results.append(result)
 
     logger.info("Testing Multiprocessing")
-    for backend in ["sqlite_filelock", "mp_limiter"]:
+    for backend in ["sqlite_filelock", "mp_limiter", "mp_limiter2"]:
         backend = cast(Literal["default", "sqlite", "sqlite_filelock", "mp_limiter"], backend)
 
         for requests_per_second in requests_per_second_list:
