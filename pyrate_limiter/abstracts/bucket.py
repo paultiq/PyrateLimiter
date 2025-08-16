@@ -116,6 +116,46 @@ class AbstractBucket(ABC):
         self.close()
 
 
+class SyncAbstractBucket(AbstractBucket):
+    @abstractmethod
+    def put(self, item: RateItem) -> bool: ...
+
+    @abstractmethod
+    def leak(
+        self,
+        current_timestamp: Optional[int] = None,
+    ) -> int: ...
+
+    @abstractmethod
+    def count(self) -> int: ...
+
+    @abstractmethod
+    def peek(self, index: int) -> Optional[RateItem]: ...
+
+    def waiting(self, item: RateItem) -> int:
+        return super().waiting(item)  # type: ignore[return-value]
+
+
+class AsyncAbstractBucket(AbstractBucket):
+    @abstractmethod
+    async def put(self, item: RateItem) -> bool: ...
+
+    @abstractmethod
+    async def leak(
+        self,
+        current_timestamp: Optional[int] = None,
+    ) -> int: ...
+
+    @abstractmethod
+    async def flush(self) -> None: ...
+
+    @abstractmethod
+    async def peek(self, index: int) -> Optional[RateItem]: ...
+
+    async def waiting(self, item: RateItem) -> int:
+        return await super().waiting(item)  # type: ignore[return-value, misc]
+
+
 class Leaker(Thread):
     """Responsible for scheduling buckets' leaking at the background either
     through a daemon task(for sync buckets) or a task using asyncio.Task

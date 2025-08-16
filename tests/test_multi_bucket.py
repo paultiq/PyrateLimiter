@@ -11,7 +11,6 @@ async def test_delay_waiter_blocks_until_slot_available(create_bucket):
     bucket = await create_bucket(rates=[Rate(1, 1000), Rate(3, 5000)]) # 1 per sec, 3 per 5s
     limiter = Limiter(bucket) 
 
-    t0 = time.time()
     assert await limiter.try_acquire_async("x")        # 1st ok
     assert await limiter.try_acquire_async("x")        # 2nd ok
     assert await limiter.try_acquire_async("x")        # 3rd ok
