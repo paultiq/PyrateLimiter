@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class Queries:
     CREATE_BUCKET_TABLE = """
     CREATE TABLE IF NOT EXISTS {table} (
+        id BIGSERIAL PRIMARY KEY,
         name VARCHAR,
         weight SMALLINT,
         item_timestamp TIMESTAMP
@@ -34,7 +35,7 @@ class Queries:
     PEEK = """
     SELECT name, weight, (extract(EPOCH FROM item_timestamp) * 1000) as item_timestamp
     FROM {table}
-    ORDER BY item_timestamp DESC
+    ORDER BY item_timestamp DESC, id desc
     LIMIT 1
     OFFSET {offset}
     """
