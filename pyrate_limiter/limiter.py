@@ -11,7 +11,7 @@ from typing import Any, Awaitable, Callable, Iterable, List, Optional, Tuple, Un
 
 from .abstracts import AbstractBucket, AbstractClock, BucketFactory, Duration, Rate, RateItem
 from .buckets import InMemoryBucket
-from .clocks import TimeClock
+from .clocks import MonotonicClock
 from .exceptions import BucketFullException, LimiterDelayException
 
 logger = logging.getLogger("pyrate_limiter")
@@ -83,10 +83,10 @@ class Limiter:
     def __init__(
         self,
         argument: Union[BucketFactory, AbstractBucket, Rate, List[Rate]],
-        clock: Optional[AbstractClock] = None,
         raise_when_fail: bool = True,
-        max_delay: Optional[Union[int, Duration]] = None,
+        max_delay: Union[int, Duration] | None = None,
         retry_until_max_delay: bool = False,
+        clock: AbstractClock | None = None,
         buffer_ms: int = 50,
     ):
         """Init Limiter using either a single bucket / multiple-bucket factory
@@ -94,7 +94,7 @@ class Limiter:
 
         Parameters:
             argument (Union[BucketFactory, AbstractBucket, Rate, List[Rate]]): The bucket or rate configuration.
-            clock (AbstractClock, optional): The clock instance to use for rate limiting. Defaults to TimeClock().
+            clock (AbstractClock, optional): The clock instance to use for rate limiting. Defaults to MonotonicClock().
             raise_when_fail (bool, optional): Whether to raise an exception when rate limiting fails. Defaults to True.
             max_delay (Optional[Union[int, Duration]], optional): The maximum delay allowed for rate limiting.
             Defaults to None.
@@ -102,7 +102,7 @@ class Limiter:
                 Useful for ensuring operations eventually succeed within the allowed delay window. Defaults to False.
         """
         if clock is None:
-            clock = TimeClock()
+            clock = MonotonicClock()
         self.bucket_factory = self._init_bucket_factory(argument, clock=clock)
         self.raise_when_fail = raise_when_fail
         self.retry_until_max_delay = retry_until_max_delay
@@ -201,8 +201,7 @@ class Limiter:
 
         if _force_async or isawaitable(delay):
 
-            async def _handle_async():
-                nonlocal delay
+            async def _handle_async(delay):
                 if isawaitable(delay):
                     delay = await delay
                 assert isinstance(delay, int), "Delay not integer"
@@ -240,7 +239,7 @@ class Limiter:
                     elif re_acquire:
                         return True
 
-            return _handle_async()
+            return _handle_async(delay)
 
         assert isinstance(delay, int)
 
@@ -302,8 +301,7 @@ class Limiter:
 
         if isawaitable(acquire):
 
-            async def _put_async():
-                nonlocal acquire
+            async def _put_async(acquire):
                 acquire = await acquire
                 result = _handle_result(acquire)
 
@@ -312,7 +310,7 @@ class Limiter:
 
                 return result
 
-            return _put_async()
+            return _put_async(acquire)
 
         return _handle_result(acquire)  # type: ignore
 
@@ -360,8 +358,7 @@ class Limiter:
 
             if isawaitable(item):
 
-                async def _handle_async():
-                    nonlocal item
+                async def _handle_async(item):
                     item = await item
                     bucket = self.bucket_factory.get(item)
                     if isawaitable(bucket):
@@ -374,14 +371,13 @@ class Limiter:
 
                     return result
 
-                return _handle_async()
+                return _handle_async(item)
 
             assert isinstance(item, RateItem)  # NOTE: this is to silence mypy warning
             bucket = self.bucket_factory.get(item)
             if isawaitable(bucket):
 
-                async def _handle_async_bucket():
-                    nonlocal bucket
+                async def _handle_async_bucket(bucket):
                     bucket = await bucket
                     assert isinstance(bucket, AbstractBucket), f"Invalid bucket: item: {name}"
                     result = self.handle_bucket_put(bucket, item, _force_async=_force_async)
@@ -391,21 +387,20 @@ class Limiter:
 
                     return result
 
-                return _handle_async_bucket()
+                return _handle_async_bucket(bucket)
 
             assert isinstance(bucket, AbstractBucket), f"Invalid bucket: item: {name}"
             result = self.handle_bucket_put(bucket, item, _force_async=_force_async)
 
             if isawaitable(result):
 
-                async def _handle_async_result():
-                    nonlocal result
+                async def _handle_async_result(result):
                     while isawaitable(result):
                         result = await result
 
                     return result
 
-                return _handle_async_result()
+                return _handle_async_result(result)
 
             return result
 
@@ -445,8 +440,7 @@ class Limiter:
                         if not isawaitable(accquire_ok):
                             return func(*args, **kwargs)
 
-                        async def _handle_accquire_async():
-                            nonlocal accquire_ok
+                        async def _handle_accquire_async(accquire_ok):
                             accquire_ok = await accquire_ok
 
                             result = func(*args, **kwargs)
@@ -456,7 +450,7 @@ class Limiter:
 
                             return result
 
-                        return _handle_accquire_async()
+                        return _handle_accquire_async(accquire_ok)
 
                     return wrapper
 

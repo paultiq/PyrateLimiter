@@ -115,8 +115,8 @@ def test_rate_limiter(
     for f in futures:
         try:
             f.result()
-        except Exception as e:
-            logger.exception(f"Task raised: {e}")
+        except Exception:
+            logger.exception("Task raised")
 
     end = perf_counter()
 
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     for backend in ["default", "sqlite", "mp_limiter"]:
         backend = cast(Literal["default", "sqlite", "sqlite_filelock", "mp_limiter"], backend)
         for requests_per_second in requests_per_second_list:
-            logger.info(f"Testing with {backend=}, {requests_per_second=}")
+            logger.info("Testing with %s, %s", backend, requests_per_second)
             limiter_creator = create_rate_limiter_factory(requests_per_second, max_delay_seconds=60, backend=backend)
 
             result = run_test_limiter(
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         backend = cast(Literal["default", "sqlite", "sqlite_filelock", "mp_limiter"], backend)
 
         for requests_per_second in requests_per_second_list:
-            logger.info(f"Testing with {backend=}, {requests_per_second=}")
+            logger.info("Testing with %s, %s", backend, requests_per_second)
 
             limiter_creator = create_rate_limiter_factory(requests_per_second, max_delay_seconds=60, backend=backend)
             result = run_test_limiter(

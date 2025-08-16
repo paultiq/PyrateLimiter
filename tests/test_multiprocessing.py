@@ -11,6 +11,7 @@ from typing import List
 from typing import Optional
 
 import pytest
+from .conftest import ClockSet, wrap_if_not_async
 
 from pyrate_limiter import AbstractBucket
 from pyrate_limiter import BucketAsyncWrapper
@@ -21,7 +22,7 @@ from pyrate_limiter import LimiterDelayException
 from pyrate_limiter import Rate
 from pyrate_limiter import SQLiteBucket
 from pyrate_limiter import SQLiteClock
-from pyrate_limiter import TimeClock
+from pyrate_limiter import MonotonicClock
 from pyrate_limiter.buckets.mp_bucket import MultiprocessBucket
 
 MAX_DELAY = Duration.DAY
@@ -46,7 +47,7 @@ def init_process_mp(
         LIMITER = Limiter(
             bucket,
             raise_when_fail=raise_when_fail,
-            clock=TimeClock(),
+            clock=MonotonicClock(),
             max_delay=max_delay,
             retry_until_max_delay=not raise_when_fail,
         )
@@ -99,7 +100,7 @@ def my_task_async(num_requests):
 
     async def run_many_async_tasks():
         assert BUCKET is not None
-        bucket = BucketAsyncWrapper(BUCKET)
+        bucket = wrap_if_not_async(BUCKET)
         limiter = Limiter(
             bucket,
             raise_when_fail=False,
@@ -286,7 +287,7 @@ def test_limiter_delay():
         limiter = Limiter(
             bucket,
             raise_when_fail=True,
-            clock=TimeClock(),
+            clock=MonotonicClock(),
             max_delay=Duration.SECOND,
             retry_until_max_delay=False,
         )
@@ -318,7 +319,7 @@ def test_bucket_full():
     limiter = Limiter(
         bucket,
         raise_when_fail=True,
-        clock=TimeClock(),
+        clock=MonotonicClock(),
         max_delay=None,
         retry_until_max_delay=False,
     )

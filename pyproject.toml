@@ -101,8 +101,8 @@ include = ["pyrate_limiter"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-retries = 2
-retry_delay = 4
+retries = 0
+retry_delay = 1
 cumulative_timing = false
 retry_outcome = "rerun"
 

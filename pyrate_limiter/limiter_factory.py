@@ -5,7 +5,7 @@ A collection of common use cases and patterns for pyrate_limiter
 import logging
 from typing import List, Optional, Union
 
-from pyrate_limiter import AbstractBucket, BucketAsyncWrapper, Duration, InMemoryBucket, Limiter, Rate, SQLiteBucket
+from pyrate_limiter import AbstractBucket, Duration, InMemoryBucket, Limiter, Rate, SQLiteBucket
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ def create_sqlite_limiter(
     max_delay: Union[int, Duration] = Duration.DAY,
     buffer_ms: int = 50,
     use_file_lock: bool = False,
-    async_wrapper: bool = False,
 ) -> Limiter:
     """
     Create a SQLite-backed rate limiter with configurable rate, persistence, and optional async support.
@@ -66,7 +65,6 @@ def create_sqlite_limiter(
         max_delay: Maximum delay before failing requests.
         buffer_ms: Extra wait time in milliseconds to account for clock drift.
         use_file_lock: Enable file locking for multi-process synchronization.
-        async_wrapper: Whether to wrap the bucket for async usage.
 
     Returns:
         Limiter: Configured SQLite-backed limiter instance.
@@ -82,9 +80,6 @@ def create_sqlite_limiter(
         use_file_lock=use_file_lock,
     )
 
-    if async_wrapper:
-        bucket = BucketAsyncWrapper(bucket)
-
     limiter = Limiter(bucket, raise_when_fail=False, max_delay=max_delay, retry_until_max_delay=True, buffer_ms=buffer_ms)
 
     return limiter
@@ -95,7 +90,6 @@ def create_inmemory_limiter(
     duration: Union[int, Duration] = Duration.SECOND,
     max_delay: Union[int, Duration] = Duration.DAY,
     buffer_ms: int = 50,
-    async_wrapper: bool = False,
 ) -> Limiter:
     """
     Create an in-memory rate limiter with configurable rate, duration, delay, and optional async support.
@@ -105,7 +99,6 @@ def create_inmemory_limiter(
         duration: Time window for the rate limit.
         max_delay: Maximum delay before failing requests.
         buffer_ms: Extra wait time in milliseconds to account for clock drift.
-        async_wrapper: Whether to wrap the bucket for async usage.
 
     Returns:
         Limiter: Configured in-memory limiter instance.
@@ -113,9 +106,6 @@ def create_inmemory_limiter(
     rate = Rate(rate_per_duration, duration)
     rate_limits = [rate]
     bucket: AbstractBucket = InMemoryBucket(rate_limits)
-
-    if async_wrapper:
-        bucket = BucketAsyncWrapper(InMemoryBucket(rate_limits))
 
     limiter = Limiter(bucket, raise_when_fail=False, max_delay=max_delay, retry_until_max_delay=True, buffer_ms=buffer_ms)
 

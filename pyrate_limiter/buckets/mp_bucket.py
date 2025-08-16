@@ -23,6 +23,7 @@ class MultiprocessBucket(InMemoryBucket):
         self.rates = sorted(rates, key=lambda r: r.interval)
         self.items = items
         self.mp_lock = mp_lock
+        self._manager = Manager
 
     def put(self, item: RateItem) -> bool:
         with self.mp_lock:
@@ -43,8 +44,12 @@ class MultiprocessBucket(InMemoryBucket):
         """
         Creates a single ListProxy so that this bucket can be shared across multiple processes.
         """
-        shared_items: List[RateItem] = Manager().list()  # type: ignore[assignment]
+        manager = Manager()
+        shared_items: List[RateItem] = manager.list()  # type: ignore[assignment]
 
         mp_lock: LockType = RLock()
 
         return cls(rates=rates, items=shared_items, mp_lock=mp_lock)
+
+    def close(self):
+        pass

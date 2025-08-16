@@ -4,6 +4,7 @@ import time
 from inspect import isawaitable
 
 import pytest
+from .conftest import ClockSet, wrap_if_not_async
 
 from .conftest import DEFAULT_RATES
 from .conftest import logger
@@ -24,7 +25,7 @@ from pyrate_limiter import Limiter
 from pyrate_limiter import LimiterDelayException
 from pyrate_limiter import Rate
 from pyrate_limiter import SingleBucketFactory
-from pyrate_limiter import TimeClock
+from pyrate_limiter import MonotonicClock
 
 
 @pytest.mark.asyncio
@@ -51,11 +52,11 @@ async def test_limiter_constructor_02(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
 
     limiter = Limiter(bucket)
     assert isinstance(limiter.bucket_factory, SingleBucketFactory)
-    assert isinstance(limiter.bucket_factory.clock, TimeClock)
+    assert isinstance(limiter.bucket_factory.clock, MonotonicClock)
     assert limiter.max_delay is None
     assert limiter.raise_when_fail is True
 
@@ -99,7 +100,7 @@ async def test_limiter_01(
     if request.node.get_closest_marker("mpbucket"):
         pytest.skip("Skipped mpbucket test due to erratic performance timing compared to more deterministic buckets")
 
-    bucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
 
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
@@ -108,7 +109,7 @@ async def test_limiter_01(
         max_delay=limiter_delay,
         buffer_ms=10
     )
-    bucket = BucketAsyncWrapper(bucket)
+    bucket = wrap_if_not_async(bucket)
 
     item = "demo"
 
@@ -267,7 +268,7 @@ async def test_limiter_concurrency(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket: AbstractBucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
         factory,
@@ -315,7 +316,7 @@ async def test_limiter_decorator(
     limiter_should_raise,
     limiter_delay,
 ):
-    bucket = await create_bucket(DEFAULT_RATES)
+    bucket = await create_bucket(rates=DEFAULT_RATES)
     factory = DemoBucketFactory(clock, demo=bucket)
     limiter = Limiter(
         factory,
@@ -356,7 +357,7 @@ def test_wait_too_long():
 
     rate = Rate(requests_per_second, Duration.SECOND)
     bucket = InMemoryBucket([rate])
-    limiter = Limiter(bucket, raise_when_fail=False, clock=TimeClock(),
+    limiter = Limiter(bucket, raise_when_fail=False, clock=MonotonicClock(),
                       max_delay=Duration.SECOND, retry_until_max_delay=True)
 
     # raise_when_fail = False
@@ -370,7 +371,7 @@ def test_wait_too_long():
     time.sleep(1)
 
     # raise_when_fail = True
-    limiter = Limiter(bucket, raise_when_fail=True, clock=TimeClock(),
+    limiter = Limiter(bucket, raise_when_fail=True, clock=MonotonicClock(),
                       max_delay=Duration.SECOND, retry_until_max_delay=True)
 
     with pytest.raises(LimiterDelayException):

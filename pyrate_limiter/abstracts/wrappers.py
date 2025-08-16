@@ -3,11 +3,11 @@
 from inspect import isawaitable
 from typing import Optional
 
-from .bucket import AbstractBucket
+from .bucket import AbstractBucket, AsyncAbstractBucket
 from .rate import RateItem
 
 
-class BucketAsyncWrapper(AbstractBucket):
+class BucketAsyncWrapper(AsyncAbstractBucket):
     """BucketAsyncWrapper is a wrapping over any bucket
     that turns a async/synchronous bucket into an async one
     """
@@ -75,3 +75,12 @@ class BucketAsyncWrapper(AbstractBucket):
     @property
     def rates(self):
         return self.bucket.rates
+
+    def close(self):
+        self.bucket.close()
+
+    async def __aexit__(self):
+        self.bucket.close()
+
+    def __exit__(self):
+        self.bucket.close()
