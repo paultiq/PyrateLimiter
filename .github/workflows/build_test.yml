@@ -141,7 +141,7 @@ jobs:
         path: dist
 
   publish:
-    needs: check-linux, check-winmacos
+    needs: [check-linux, check-winmacos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
