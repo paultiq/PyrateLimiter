@@ -40,8 +40,8 @@ jobs:
     needs: smoke
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: true
       matrix:
-        fail-fast: true
         include: 
         - os: macos-latest 
           python-version: *latest
