@@ -18,7 +18,7 @@ PYTEST_ARGS = ["--verbose", "--maxfail=1", "-m", "not mpbucket", "--numprocesses
 
 COVERAGE_REPORT_ARGS = ["--cov=pyrate_limiter", "--cov-append", "--cov-report=term", "--cov-report=xml", "--cov-report=html"]
 
-PYTESTSMOKE_ARGS = ["--verbose", "--maxfail=1", "-m", "inmemory", "--numprocesses=3", "--ignore=tests/test_multiprocessing.py"]
+PYTESTSMOKE_ARGS = ["--verbose", "--maxfail=1", "-m", "inmemory and monotonic", "--numprocesses=auto", "--ignore=tests/test_multiprocessing.py"]
 PYTEST_NOTLINUX_ARGS = [
     "--verbose",
     "--maxfail=1",

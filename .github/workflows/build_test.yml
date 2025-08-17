@@ -36,7 +36,7 @@ jobs:
       - run: uv sync --all-groups
       - run: uv run nox -e smoke
 
-  check-winmacos:
+  check-others:
     needs: smoke
     runs-on: ${{ matrix.os }}
     strategy:
@@ -141,7 +141,7 @@ jobs:
         path: dist
 
   publish:
-    needs: [check-linux, check-winmacos]
+    needs: [check-linux, check-others]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
