@@ -9,7 +9,7 @@ on:
       - master
 
 env:
-  LATEST_PY_VERSION: '3.13'
+  LATEST_PY_VERSION: &latest '3.13'
   REDIS: 'redis://localhost:6379'
 
 jobs:
@@ -43,9 +43,9 @@ jobs:
         python-version: ['3.13', '3.12', '3.11', '3.10', 'pypy3.11']
         include:
           - os: windows-latest
-            python-version: "${{ env.LATEST_PY_VERSION }}"
+            python-version: *latest
           - os: macos-latest
-            python-version: "${{ env.LATEST_PY_VERSION }}"
+            python-version: *latest
     steps:
     - name: Check out code
       uses: actions/checkout@v4
