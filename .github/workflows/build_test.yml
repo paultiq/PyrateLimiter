@@ -13,8 +13,50 @@ env:
   REDIS: 'redis://localhost:6379'
 
 jobs:
-  check:
+  smoke:
     runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ env.LATEST_PY_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.LATEST_PY_VERSION }}
+          allow-prereleases: true
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: ${{ env.LATEST_PY_VERSION }}
+      - run: uv sync --all-groups
+      - run: uv run nox -e smoke
+  check:
+    needs: smoke
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - os: ubuntu-latest
+          python-version: '3.10'
+        - os: ubuntu-latest
+          python-version: '3.11'
+        - os: ubuntu-latest
+          python-version: '3.12'
+        - os: ubuntu-latest
+          python-version: pypy3.11
+        - os: ubuntu-latest
+          python-version: '3.13'
+        - os: ubuntu-latest
+          python-version: '3.14'
+        - os: ubuntu-latest
+          python-version: '3.14t'
+        - os: windows-latest
+          python-version: *latest
+        - os: macos-latest
+          python-version: *latest
     services:
       pyrate_redis:
         image: bitnami/redis:latest
@@ -36,16 +78,6 @@ jobs:
           POSTGRESQL_MAX_CONNECTIONS: 1000
         ports:
           - 5432:5432
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.13', '3.12', '3.11', '3.10', 'pypy3.11']
-        include:
-          - os: windows-latest
-            python-version: *latest
-          - os: macos-latest
-            python-version: *latest
     steps:
     - name: Check out code
       uses: actions/checkout@v4
@@ -66,11 +98,11 @@ jobs:
       run: uv sync --all-groups
     # Run linting (latest python version only)
     - name: Lint
-      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION && matrix.os == 'ubuntu-latest' }}
       run: |
         uv run nox -e lint
     - name: Build and install package
-      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION && matrix.os == 'ubuntu-latest' }}
       run: |
         uv build
         uv pip install dist/*.whl
@@ -80,11 +112,11 @@ jobs:
         uv run nox -e cover
     # Latest python version: send coverage report to codecov
     - name: "Upload coverage report to Codecov"
-      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION && matrix.os == 'ubuntu-latest' }}
       uses: codecov/codecov-action@v2
 
     - name: Upload dist, if this is latest
-      if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+      if: ${{ matrix.python-version == env.LATEST_PY_VERSION && matrix.os == 'ubuntu-latest' }}
       uses: actions/upload-artifact@v4
       with:
         name: dist

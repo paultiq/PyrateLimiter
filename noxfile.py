@@ -42,6 +42,13 @@ def cover(session) -> None:
 
 
 @session(python=False)
+def smoke(session) -> None:
+    """Smoke test - tests against in-memory database"""
+
+    session.run("pytest", *PYTEST_ARGS, "-k", "memory", *COVERAGE_REPORT_ARGS, "tests")
+
+
+@session(python=False)
 def test(session) -> None:
     session.run("pytest", *PYTEST_MP_ARGS)
     session.run("pytest", *PYTEST_MP2_ARGS)
