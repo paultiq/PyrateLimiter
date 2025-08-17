@@ -8,6 +8,11 @@ on:
     branches:
       - master
 
+concurrency:
+  # cancels superceded runs
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   LATEST_PY_VERSION: &latest '3.13'
   REDIS: 'redis://localhost:6379'
@@ -70,6 +75,12 @@ jobs:
     - name: Test and Coverage
       run: |
         uv run nox -e notlinux
+    - name: Cancel run if this job fails
+      if: ${{ failure() && !cancelled() }}
+      uses: actions/github-script@v7
+      with:
+        script: |
+          await github.request('POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel', { owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId })
     
   check-linux:
     needs: smoke
@@ -139,7 +150,13 @@ jobs:
       with:
         name: dist
         path: dist
-
+    - name: Cancel run if this job fails
+      if: ${{ failure() && !cancelled() }}
+      uses: actions/github-script@v7
+      with:
+        script: |
+          await github.request('POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel', { owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId })
+    
   publish:
     needs: [check-linux, check-others]
     runs-on: ubuntu-latest
