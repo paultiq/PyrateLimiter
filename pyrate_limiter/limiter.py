@@ -2,12 +2,13 @@
 
 import asyncio
 import logging
+import warnings
 from contextlib import contextmanager
 from functools import wraps
 from inspect import isawaitable, iscoroutinefunction
 from threading import RLock, local
 from time import sleep
-from typing import Any, Awaitable, Callable, Iterable, List, Protocol, Tuple, Union
+from typing import Any, Awaitable, Callable, Iterable, List, Optional, Protocol, Tuple, Union
 
 from .abstracts import AbstractBucket, BucketFactory, Rate, RateItem
 from .buckets import InMemoryBucket
@@ -93,6 +94,7 @@ class Limiter:
     def __init__(
         self,
         argument: Union[BucketFactory, AbstractBucket, Rate, List[Rate]],
+        *,
         buffer_ms: int = 50,
     ):
         """Init Limiter using either a single bucket / multiple-bucket factory
@@ -100,6 +102,7 @@ class Limiter:
 
         Parameters:
             argument (Union[BucketFactory, AbstractBucket, Rate, List[Rate]]): The bucket or rate configuration.
+            buffer_ms (int): Buffer time in milliseconds for delays (default: 50).
         """
 
         self.buffer_ms = buffer_ms
@@ -229,7 +232,7 @@ class Limiter:
         self._thread_local.async_lock_loop = loop
         return lock
 
-    def try_acquire(self, name: str = "pyrate", weight: int = 1, blocking: bool = True, timeout: int = -1) -> Union[bool, Awaitable[bool]]:
+    def try_acquire(self, name: str = "pyrate", weight: int = 1, *, blocking: bool = True, timeout: int = -1) -> Union[bool, Awaitable[bool]]:
         """
         Attempt to acquire a permit from the limiter.
 
@@ -261,7 +264,7 @@ class Limiter:
     async def _acquire_async(self, blocking, name, weight):
         return await self._handle_async_result(self._try_acquire(name, weight, blocking=blocking, _force_async=True))
 
-    async def try_acquire_async(self, name: str = "pyrate", weight: int = 1, blocking: bool = True, timeout: int = -1) -> bool:
+    async def try_acquire_async(self, name: str = "pyrate", weight: int = 1, *, blocking: bool = True, timeout: int = -1) -> bool:
         """
         Attempt to asynchronously acquire a permit from the limiter.
 
@@ -381,7 +384,95 @@ class Limiter:
 
             return result
 
-    def as_decorator(self, *, name="ratelimiter", weight=1):
+    def as_decorator(self, mapping: Optional[ItemMapping] = None, *, name: str = "ratelimiter", weight: int = 1):
+        """
+        Rate limiting decorator. Supports both new and legacy syntax.
+
+        New syntax (recommended):
+            @limiter.as_decorator(name="my_key", weight=1)
+            def my_function():
+                pass
+
+        Legacy syntax (deprecated):
+            @limiter.as_decorator()(lambda *args, **kwargs: ("my_key", 1))
+            def my_function():
+                pass
+        """
+        # Validate mapping parameter if provided
+        if mapping is not None and not callable(mapping):
+            raise TypeError(
+                f"The first positional argument to as_decorator() is only for legacy mapping functions. "
+                f"To use the new syntax, pass 'name' as a keyword argument: as_decorator(name={mapping!r}, weight=1)"
+            )
+
+        # Legacy mode: called as @limiter.as_decorator() with no args
+        if mapping is None and name == "ratelimiter" and weight == 1:
+            warnings.warn(
+                "Calling as_decorator() without arguments is deprecated. Use as_decorator(name='...', weight=...) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+            def with_mapping(mapping_func: ItemMapping) -> DecoratorWrapper:
+                def decorator_wrapper(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
+                    if iscoroutinefunction(func):
+
+                        @wraps(func)
+                        async def wrapper_async(*args, **kwargs):
+                            (item_name, item_weight) = mapping_func(*args, **kwargs)
+                            await self.try_acquire_async(name=item_name, weight=item_weight)
+                            return await func(*args, **kwargs)
+
+                        return wrapper_async
+                    else:
+
+                        @wraps(func)
+                        def wrapper_sync(*args, **kwargs):
+                            (item_name, item_weight) = mapping_func(*args, **kwargs)
+                            result = self.try_acquire(name=item_name, weight=item_weight)
+                            if isawaitable(result):
+                                raise RuntimeError("Can't use async bucket with sync decorator")
+                            return func(*args, **kwargs)
+
+                        return wrapper_sync
+
+                return decorator_wrapper
+
+            return with_mapping
+
+        # Legacy mode: called as @limiter.as_decorator(mapping_func)
+        if mapping is not None and callable(mapping):
+            warnings.warn(
+                "Passing a mapping function directly to as_decorator() is deprecated. Use as_decorator(name='...', weight=...) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+            def decorator_wrapper(func: Callable[[Any], Any]) -> Callable[[Any], Any]:
+                if iscoroutinefunction(func):
+
+                    @wraps(func)
+                    async def wrapper_async(*args, **kwargs):
+                        (item_name, item_weight) = mapping(*args, **kwargs)
+                        await self.try_acquire_async(name=item_name, weight=item_weight)
+                        return await func(*args, **kwargs)
+
+                    return wrapper_async
+                else:
+
+                    @wraps(func)
+                    def wrapper_sync(*args, **kwargs):
+                        (item_name, item_weight) = mapping(*args, **kwargs)
+                        result = self.try_acquire(name=item_name, weight=item_weight)
+                        if isawaitable(result):
+                            raise RuntimeError("Can't use async bucket with sync decorator")
+                        return func(*args, **kwargs)
+
+                    return wrapper_sync
+
+            return decorator_wrapper
+
+        # New mode: called with name/weight keyword arguments
         def deco(func: Callable[..., Any]) -> Callable[..., Any]:
             if iscoroutinefunction(func):
 
